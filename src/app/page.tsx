@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { auth } from '@clerk/nextjs'
+import { auth } from '@clerk/nextjs/server'
 import { ArrowRight, Search, BarChart3, TrendingUp, Shield } from 'lucide-react'
 
 export default async function HomePage() {
