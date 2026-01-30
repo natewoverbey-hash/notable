@@ -1,0 +1,722 @@
+{
+  "version": "1.0",
+  "categories": [
+    {
+      "id": "direct-search",
+      "name": "Direct Agent Search",
+      "description": "High-intent queries from buyers looking for an agent"
+    },
+    {
+      "id": "specialty",
+      "name": "Specialty/Niche",
+      "description": "Buyers looking for specialists in specific property types"
+    },
+    {
+      "id": "neighborhood",
+      "name": "Neighborhood-Specific",
+      "description": "Location-based agent searches"
+    },
+    {
+      "id": "reputation",
+      "name": "Comparison/Reputation",
+      "description": "Buyers researching specific agents"
+    },
+    {
+      "id": "process",
+      "name": "Process/Advice",
+      "description": "Content-based queries where experts get cited"
+    },
+    {
+      "id": "market",
+      "name": "Market Intelligence",
+      "description": "Market condition queries"
+    },
+    {
+      "id": "investment",
+      "name": "Investment Property",
+      "description": "Investors looking for agent help"
+    },
+    {
+      "id": "distress",
+      "name": "Distress/Life Transitions",
+      "description": "Sellers in difficult situations"
+    },
+    {
+      "id": "luxury",
+      "name": "Luxury/High-Net-Worth",
+      "description": "High-end buyers and sellers"
+    },
+    {
+      "id": "land",
+      "name": "Land & Lot",
+      "description": "Buyers looking for land"
+    }
+  ],
+  "prompts": [
+    {
+      "id": 1,
+      "category": "direct-search",
+      "template": "Who is the best real estate agent in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 2,
+      "category": "direct-search",
+      "template": "Best realtor in {neighborhood}",
+      "variables": ["neighborhood"],
+      "intent": "high"
+    },
+    {
+      "id": 3,
+      "category": "direct-search",
+      "template": "Top rated real estate agents in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 4,
+      "category": "direct-search",
+      "template": "Who are the top listing agents in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 5,
+      "category": "direct-search",
+      "template": "Best buyer's agent in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 6,
+      "category": "direct-search",
+      "template": "Top real estate agents near me in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 7,
+      "category": "direct-search",
+      "template": "Who is the best realtor for first-time home buyers in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 8,
+      "category": "direct-search",
+      "template": "Best luxury real estate agent in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 9,
+      "category": "direct-search",
+      "template": "Best real estate agent for selling a home in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 10,
+      "category": "direct-search",
+      "template": "Who are the most experienced realtors in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 11,
+      "category": "specialty",
+      "template": "Best realtor for waterfront homes in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 12,
+      "category": "specialty",
+      "template": "Who specializes in historic homes in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 13,
+      "category": "specialty",
+      "template": "Best real estate agent for condos in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 14,
+      "category": "specialty",
+      "template": "Top realtor for investment properties in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 15,
+      "category": "specialty",
+      "template": "Best agent for relocation to {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 16,
+      "category": "specialty",
+      "template": "Who is the best realtor for downsizing in {city}?",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 17,
+      "category": "specialty",
+      "template": "Best real estate agent for military families in {city}",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 18,
+      "category": "specialty",
+      "template": "Top realtor for new construction in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 19,
+      "category": "specialty",
+      "template": "Best agent for golf course communities in {city}",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 20,
+      "category": "specialty",
+      "template": "Who handles luxury listings in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 21,
+      "category": "neighborhood",
+      "template": "Best realtor in {neighborhood}",
+      "variables": ["neighborhood"],
+      "intent": "high"
+    },
+    {
+      "id": 22,
+      "category": "neighborhood",
+      "template": "Who knows {neighborhood} real estate the best?",
+      "variables": ["neighborhood"],
+      "intent": "high"
+    },
+    {
+      "id": 23,
+      "category": "neighborhood",
+      "template": "Top agent for homes in {school_district} school district",
+      "variables": ["school_district"],
+      "intent": "high"
+    },
+    {
+      "id": 24,
+      "category": "neighborhood",
+      "template": "Best realtor for {subdivision}",
+      "variables": ["subdivision"],
+      "intent": "high"
+    },
+    {
+      "id": 25,
+      "category": "neighborhood",
+      "template": "Who sells the most homes in {neighborhood}?",
+      "variables": ["neighborhood"],
+      "intent": "high"
+    },
+    {
+      "id": 26,
+      "category": "neighborhood",
+      "template": "Real estate agent that specializes in {zip_code}",
+      "variables": ["zip_code"],
+      "intent": "high"
+    },
+    {
+      "id": 27,
+      "category": "neighborhood",
+      "template": "Best agent for downtown {city} condos",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 28,
+      "category": "neighborhood",
+      "template": "Who is the top realtor in {county}?",
+      "variables": ["county"],
+      "intent": "high"
+    },
+    {
+      "id": 29,
+      "category": "reputation",
+      "template": "Is {agent_name} a good realtor?",
+      "variables": ["agent_name"],
+      "intent": "high"
+    },
+    {
+      "id": 30,
+      "category": "reputation",
+      "template": "{agent_name} reviews",
+      "variables": ["agent_name"],
+      "intent": "high"
+    },
+    {
+      "id": 31,
+      "category": "reputation",
+      "template": "What do people say about {agent_name}?",
+      "variables": ["agent_name"],
+      "intent": "high"
+    },
+    {
+      "id": 32,
+      "category": "reputation",
+      "template": "{agent_name} vs {competitor_name} which is better?",
+      "variables": ["agent_name", "competitor_name"],
+      "intent": "high"
+    },
+    {
+      "id": 33,
+      "category": "reputation",
+      "template": "Has {agent_name} sold homes in {neighborhood}?",
+      "variables": ["agent_name", "neighborhood"],
+      "intent": "medium"
+    },
+    {
+      "id": 34,
+      "category": "reputation",
+      "template": "How many homes has {agent_name} sold?",
+      "variables": ["agent_name"],
+      "intent": "medium"
+    },
+    {
+      "id": 35,
+      "category": "reputation",
+      "template": "Is {brokerage} a good real estate company in {city}?",
+      "variables": ["brokerage", "city"],
+      "intent": "medium"
+    },
+    {
+      "id": 36,
+      "category": "process",
+      "template": "How do I find a good realtor in {city}?",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 37,
+      "category": "process",
+      "template": "What should I look for in a real estate agent?",
+      "variables": [],
+      "intent": "medium"
+    },
+    {
+      "id": 38,
+      "category": "process",
+      "template": "How do I sell my home in {city}?",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 39,
+      "category": "process",
+      "template": "What's the home buying process in {city}?",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 40,
+      "category": "process",
+      "template": "How long does it take to sell a house in {city}?",
+      "variables": ["city"],
+      "intent": "low"
+    },
+    {
+      "id": 41,
+      "category": "process",
+      "template": "What are closing costs when buying a home in {city}?",
+      "variables": ["city"],
+      "intent": "low"
+    },
+    {
+      "id": 42,
+      "category": "process",
+      "template": "Should I use a buyer's agent in {city}?",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 43,
+      "category": "process",
+      "template": "How do I negotiate when buying a house?",
+      "variables": [],
+      "intent": "low"
+    },
+    {
+      "id": 44,
+      "category": "process",
+      "template": "What questions should I ask a realtor before hiring them?",
+      "variables": [],
+      "intent": "medium"
+    },
+    {
+      "id": 45,
+      "category": "process",
+      "template": "How do I stage my home to sell in {city}?",
+      "variables": ["city"],
+      "intent": "low"
+    },
+    {
+      "id": 46,
+      "category": "market",
+      "template": "What is the housing market like in {city} right now?",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 47,
+      "category": "market",
+      "template": "Is it a good time to buy a house in {city}?",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 48,
+      "category": "market",
+      "template": "Are home prices going up or down in {city}?",
+      "variables": ["city"],
+      "intent": "low"
+    },
+    {
+      "id": 49,
+      "category": "market",
+      "template": "Best neighborhoods to buy in {city} in 2026",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 50,
+      "category": "market",
+      "template": "What are the most affordable areas in {city}?",
+      "variables": ["city"],
+      "intent": "low"
+    },
+    {
+      "id": 51,
+      "category": "investment",
+      "template": "Best real estate agent for investment properties in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 52,
+      "category": "investment",
+      "template": "Who is the best realtor for rental properties in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 53,
+      "category": "investment",
+      "template": "Best agent for buying multifamily homes in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 54,
+      "category": "investment",
+      "template": "Top realtor for duplex and triplex properties in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 55,
+      "category": "investment",
+      "template": "Who specializes in Airbnb investment properties in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 56,
+      "category": "investment",
+      "template": "Best real estate agent for short-term rental investments in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 57,
+      "category": "investment",
+      "template": "Realtor who understands cap rates and cash flow in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 58,
+      "category": "investment",
+      "template": "Best agent for house hacking in {city}",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 59,
+      "category": "investment",
+      "template": "Who helps investors find off-market deals in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 60,
+      "category": "investment",
+      "template": "Best realtor for 1031 exchange properties in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 61,
+      "category": "investment",
+      "template": "Real estate agent for BRRRR strategy in {city}",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 62,
+      "category": "investment",
+      "template": "Who sells fourplexes in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 63,
+      "category": "investment",
+      "template": "Best agent for buying rental property out of state in {city}",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 64,
+      "category": "investment",
+      "template": "Top realtor for vacation rental investments in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 65,
+      "category": "investment",
+      "template": "Who is the best agent for Section 8 rental properties in {city}?",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 66,
+      "category": "distress",
+      "template": "Best realtor for selling a house during divorce in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 67,
+      "category": "distress",
+      "template": "Who handles probate home sales in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 68,
+      "category": "distress",
+      "template": "Real estate agent for inherited property sales in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 69,
+      "category": "distress",
+      "template": "Best agent for selling a house fast in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 70,
+      "category": "distress",
+      "template": "Who buys homes in foreclosure in {city}?",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 71,
+      "category": "distress",
+      "template": "Realtor who works with estate sales in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 72,
+      "category": "distress",
+      "template": "Best agent for selling a home in bad condition in {city}",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 73,
+      "category": "distress",
+      "template": "Who helps with short sales in {city}?",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 74,
+      "category": "distress",
+      "template": "Real estate agent for seniors downsizing in {city}",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 75,
+      "category": "distress",
+      "template": "Best realtor for relocation sellers who need to move quickly in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 76,
+      "category": "luxury",
+      "template": "Best luxury real estate agent in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 77,
+      "category": "luxury",
+      "template": "Who sells the most expensive homes in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 78,
+      "category": "luxury",
+      "template": "Top realtor for $1 million+ homes in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 79,
+      "category": "luxury",
+      "template": "Best agent for waterfront luxury homes in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 80,
+      "category": "luxury",
+      "template": "Who handles celebrity or private home sales in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 81,
+      "category": "luxury",
+      "template": "Luxury condo specialist in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 82,
+      "category": "luxury",
+      "template": "Best realtor for gated community homes in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 83,
+      "category": "luxury",
+      "template": "Who sells estates and historic mansions in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 84,
+      "category": "luxury",
+      "template": "Top agent for high-end new construction in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 85,
+      "category": "luxury",
+      "template": "Best realtor for second home buyers in {city}",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 86,
+      "category": "land",
+      "template": "Best real estate agent for buying land in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 87,
+      "category": "land",
+      "template": "Who sells lots for building custom homes in {city}?",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 88,
+      "category": "land",
+      "template": "Realtor for acreage and rural property in {city}",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 89,
+      "category": "land",
+      "template": "Best agent for waterfront lots in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 90,
+      "category": "land",
+      "template": "Who handles land for development in {city}?",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 91,
+      "category": "land",
+      "template": "Real estate agent for farm land near {city}",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 92,
+      "category": "land",
+      "template": "Best realtor for buying land to build in {city}",
+      "variables": ["city"],
+      "intent": "high"
+    },
+    {
+      "id": 93,
+      "category": "land",
+      "template": "Who sells large parcels in {county}?",
+      "variables": ["county"],
+      "intent": "medium"
+    },
+    {
+      "id": 94,
+      "category": "land",
+      "template": "Agent for hunting land and recreational property near {city}",
+      "variables": ["city"],
+      "intent": "medium"
+    },
+    {
+      "id": 95,
+      "category": "land",
+      "template": "Best realtor for land with owner financing in {city}",
+      "variables": ["city"],
+      "intent": "medium"
+    }
+  ]
+}
