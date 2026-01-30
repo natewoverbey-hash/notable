@@ -111,3 +111,4 @@ notable/
 - **Auth**: Clerk
 - **Payments**: Stripe
 - **LLM APIs**: OpenAI, Anthropic, Google AI
+
