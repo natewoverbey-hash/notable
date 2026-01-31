@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { supabaseAdmin } from '@/lib/supabase'
+import ScanButton from './scan-button'
 
 export default async function AgentsPage() {
   const { userId } = await auth()
@@ -68,12 +69,20 @@ export default async function AgentsPage() {
                   <h3 className="font-semibold text-gray-900">{agent.name}</h3>
                   <p className="text-sm text-gray-500">{agent.brokerage}</p>
                   <p className="text-sm text-gray-500">{agent.city}, {agent.state}</p>
+                  {agent.last_scanned_at && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Last scanned: {new Date(agent.last_scanned_at).toLocaleDateString()}
+                    </p>
+                  )}
                 </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-notable-600">
-                    {agent.visibility_score ?? '--'}
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-notable-600">
+                      {agent.visibility_score ?? '--'}
+                    </div>
+                    <p className="text-sm text-gray-500">Visibility Score</p>
                   </div>
-                  <p className="text-sm text-gray-500">Visibility Score</p>
+                  <ScanButton agentId={agent.id} />
                 </div>
               </div>
             </div>
