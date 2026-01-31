@@ -28,23 +28,26 @@ export default async function ScansPage() {
       .single()
 
     if (workspace) {
-      // Get agents for reference
+      // Get agents for this workspace
       const { data: agentData } = await supabaseAdmin
         .from('agents')
         .select('id, name')
         .eq('workspace_id', workspace.id)
 
       agents = agentData || []
+      const agentIds = agents.map(a => a.id)
 
-      // Get recent scans
-      const { data: scanData } = await supabaseAdmin
-        .from('scans')
-        .select('*')
-        .eq('workspace_id', workspace.id)
-        .order('scanned_at', { ascending: false })
-        .limit(100)
+      if (agentIds.length > 0) {
+        // Get scans for these agents
+        const { data: scanData } = await supabaseAdmin
+          .from('scans')
+          .select('*')
+          .in('agent_id', agentIds)
+          .order('scanned_at', { ascending: false })
+          .limit(100)
 
-      scans = scanData || []
+        scans = scanData || []
+      }
     }
   }
 
