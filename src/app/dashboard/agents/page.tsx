@@ -1,17 +1,42 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, ExternalLink, MoreVertical } from 'lucide-react'
+import { Plus } from 'lucide-react'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export default async function AgentsPage() {
-  const { userId } = auth()
+  const { userId } = await auth()
   
   if (!userId) {
     redirect('/sign-in')
   }
 
-  // TODO: Fetch agents from database
-  const agents: any[] = []
+  // Get user's workspace
+  const { data: user } = await supabaseAdmin
+    .from('users')
+    .select('id')
+    .eq('clerk_user_id', userId)
+    .single()
+
+  let agents: any[] = []
+
+  if (user) {
+    const { data: workspace } = await supabaseAdmin
+      .from('workspaces')
+      .select('id')
+      .eq('owner_id', user.id)
+      .single()
+
+    if (workspace) {
+      const { data } = await supabaseAdmin
+        .from('agents')
+        .select('*')
+        .eq('workspace_id', workspace.id)
+        .order('created_at', { ascending: false })
+
+      agents = data || []
+    }
+  }
 
   return (
     <div>
@@ -37,41 +62,24 @@ export default async function AgentsPage() {
       ) : (
         <div className="grid gap-4">
           {agents.map((agent) => (
-            <AgentCard key={agent.id} agent={agent} />
+            <div key={agent.id} className="card">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-gray-900">{agent.name}</h3>
+                  <p className="text-sm text-gray-500">{agent.brokerage}</p>
+                  <p className="text-sm text-gray-500">{agent.city}, {agent.state}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-notable-600">
+                    {agent.visibility_score ?? '--'}
+                  </div>
+                  <p className="text-sm text-gray-500">Visibility Score</p>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       )}
-    </div>
-  )
-}
-
-function AgentCard({ agent }: { agent: any }) {
-  return (
-    <div className="card flex items-center justify-between">
-      <div>
-        <h3 className="font-semibold text-gray-900">{agent.name}</h3>
-        <p className="text-sm text-gray-600">
-          {agent.brokerage && `${agent.brokerage} • `}
-          {agent.city}, {agent.state}
-        </p>
-        {agent.neighborhoods?.length > 0 && (
-          <p className="text-sm text-gray-500 mt-1">
-            {agent.neighborhoods.join(', ')}
-          </p>
-        )}
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="text-right">
-          <p className="text-2xl font-bold text-gray-900">{agent.visibilityScore || '--'}</p>
-          <p className="text-xs text-gray-500">Visibility Score</p>
-        </div>
-        <Link 
-          href={`/dashboard/agents/${agent.id}`}
-          className="btn-secondary text-sm"
-        >
-          View Details
-        </Link>
-      </div>
     </div>
   )
 }
