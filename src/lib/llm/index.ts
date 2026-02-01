@@ -77,6 +77,9 @@ export async function queryAllLLMs(
 /**
  * Parse an LLM response to check if a specific agent was mentioned
  */
+/**
+ * Parse an LLM response to check if a specific agent was mentioned
+ */
 export function parseAgentMention(
   response: string,
   agentName: string
@@ -87,13 +90,16 @@ export function parseAgentMention(
   // Check if agent is mentioned
   const mentioned = lowerResponse.includes(lowerAgentName)
   
+  // Extract competitors from the response
+  const competitors = extractCompetitors(response, agentName)
+  
   if (!mentioned) {
     return {
       mentioned: false,
       rank: null,
       context: null,
       sentiment: null,
-      competitorsMentioned: [],
+      competitorsMentioned: competitors,
     }
   }
   
@@ -104,7 +110,7 @@ export function parseAgentMention(
   const context = response.slice(start, end)
   
   // Simple sentiment analysis based on surrounding words
-  const positiveWords = ['best', 'top', 'excellent', 'recommended', 'highly', 'great', 'outstanding', 'premier', 'expert', 'trusted']
+  const positiveWords = ['best', 'top', 'excellent', 'recommended', 'highly', 'great', 'outstanding', 'premier', 'expert', 'trusted', 'stands out', 'deep expertise', 'notable', 'leading']
   const negativeWords = ['avoid', 'not recommended', 'issues', 'problems', 'complaints']
   
   const contextLower = context.toLowerCase()
@@ -116,20 +122,111 @@ export function parseAgentMention(
     sentiment = 'negative'
   }
   
-  // Calculate rank (simple: count how many names appear before this one)
+  // Calculate rank based on position in response
   const beforeMention = lowerResponse.slice(0, index)
-  const numberedListMatches = beforeMention.match(/\d+\./g)
-  const rank = numberedListMatches ? numberedListMatches.length + 1 : 1
+  
+  // Check for numbered lists
+  const numberedListMatches = beforeMention.match(/\d+\.\s/g)
+  
+  // Check for bullet points with names before our agent
+  const bulletMatches = beforeMention.match(/[-•]\s*\*\*[^*]+\*\*/g)
+  
+  // Check if agent appears first (before "other" agents section)
+  const otherAgentsIndex = lowerResponse.indexOf('other notable agents')
+  const otherIndex = lowerResponse.indexOf('other agents')
+  const alsoIndex = lowerResponse.indexOf('also include')
+  
+  let rank = 1
+  if (numberedListMatches) {
+    rank = numberedListMatches.length + 1
+  } else if (bulletMatches) {
+    rank = bulletMatches.length + 1
+  }
+  
+  // If our agent appears before "other agents" section, they're likely #1
+  if (otherAgentsIndex > 0 && index < otherAgentsIndex) {
+    rank = 1
+  } else if (otherIndex > 0 && index < otherIndex) {
+    rank = 1
+  } else if (alsoIndex > 0 && index < alsoIndex) {
+    rank = 1
+  }
   
   return {
     mentioned: true,
     rank,
     context,
     sentiment,
-    competitorsMentioned: [],
+    competitorsMentioned: competitors,
   }
 }
 
+/**
+ * Extract competitor names from LLM response
+ */
+function extractCompetitors(response: string, excludeAgent: string): Array<{ name: string; rank: number }> {
+  const competitors: Array<{ name: string; rank: number }> = []
+  const lowerExclude = excludeAgent.toLowerCase()
+  
+  // Pattern 1: Bold names like **Name** or **Name LastName**
+  const boldPattern = /\*\*([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\*\*/g
+  let match
+  let rank = 1
+  
+  while ((match = boldPattern.exec(response)) !== null) {
+    const name = match[1].trim()
+    // Skip if it's our agent or contains common non-name words
+    if (
+      !name.toLowerCase().includes(lowerExclude) &&
+      !name.toLowerCase().includes('other') &&
+      !name.toLowerCase().includes('notable') &&
+      !name.toLowerCase().includes('group') &&
+      !name.toLowerCase().includes('team') &&
+      !name.toLowerCase().includes('the cassina') &&
+      name.split(' ').length >= 2 // Must have at least first and last name
+    ) {
+      // Check if already added
+      if (!competitors.find(c => c.name.toLowerCase() === name.toLowerCase())) {
+        competitors.push({ name, rank })
+        rank++
+      }
+    }
+  }
+  
+  // Pattern 2: Names with brokerages like "Name - Brokerage" or "Name of Brokerage"
+  const brokeragePattern = /([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s*(?:of|at|with|-|–)\s*(?:The\s)?([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)/g
+  
+  while ((match = brokeragePattern.exec(response)) !== null) {
+    const name = match[1].trim()
+    if (
+      !name.toLowerCase().includes(lowerExclude) &&
+      name.split(' ').length >= 2
+    ) {
+      if (!competitors.find(c => c.name.toLowerCase() === name.toLowerCase())) {
+        competitors.push({ name, rank })
+        rank++
+      }
+    }
+  }
+  
+  // Pattern 3: Team names like "The X Team" or "X Group"
+  const teamPattern = /(?:The\s)?([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+(Team|Group|Realty|Real Estate)/g
+  
+  while ((match = teamPattern.exec(response)) !== null) {
+    const name = match[0].trim()
+    if (
+      !name.toLowerCase().includes(lowerExclude) &&
+      !name.toLowerCase().includes('cassina')
+    ) {
+      if (!competitors.find(c => c.name.toLowerCase() === name.toLowerCase())) {
+        competitors.push({ name, rank })
+        rank++
+      }
+    }
+  }
+  
+  return competitors.slice(0, 10) // Limit to top 10 competitors
+}
 /**
  * Fill in variables in a prompt template
  */
