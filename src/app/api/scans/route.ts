@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     // Run scans for a subset of prompts (to start)
     // In production, this would be queued and processed by a worker
     const promptsToRun = prompts.prompts.slice(0, 10) // Start with first 10
-    const providers = ['chatgpt', 'claude', 'gemini'] as const
+    const providers = ['chatgpt', 'claude', 'gemini', 'perplexity'] as const
 
     let completed = 0
     const results = []
