@@ -15,7 +15,7 @@ export async function queryGemini(prompt: string): Promise<LLMResponse> {
   const startTime = Date.now()
   
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
     
     const result = await model.generateContent(prompt)
     const response = await result.response
@@ -25,7 +25,7 @@ export async function queryGemini(prompt: string): Promise<LLMResponse> {
     
     return {
       provider: 'gemini',
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       response: text,
       tokens: 0, // Gemini doesn't easily expose token count
       latencyMs,
@@ -33,7 +33,7 @@ export async function queryGemini(prompt: string): Promise<LLMResponse> {
   } catch (error: any) {
     return {
       provider: 'gemini',
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       response: '',
       tokens: 0,
       latencyMs: Date.now() - startTime,
