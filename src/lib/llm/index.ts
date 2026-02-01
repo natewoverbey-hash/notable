@@ -1,6 +1,7 @@
 import { queryOpenAI } from './openai'
 import { queryAnthropic } from './anthropic'
 import { queryGemini } from './gemini'
+import { queryPerplexity } from './perplexity'
 
 export type LLMProvider = 'chatgpt' | 'claude' | 'gemini' | 'perplexity'
 
@@ -15,8 +16,8 @@ export interface LLMResponse {
 
 export interface ParsedMention {
   mentioned: boolean
-  rank: number | null // 1 = first mentioned, 2 = second, etc.
-  context: string | null // The snippet where agent was mentioned
+  rank: number | null
+  context: string | null
   sentiment: 'positive' | 'neutral' | 'negative' | null
   competitorsMentioned: Array<{ name: string; rank: number }>
 }
@@ -28,25 +29,37 @@ export async function queryLLM(
   provider: LLMProvider,
   prompt: string
 ): Promise<LLMResponse> {
-  switch (provider) {
-    case 'chatgpt':
-      return queryOpenAI(prompt)
-    case 'claude':
-      return queryAnthropic(prompt) as Promise<LLMResponse>
-    case 'gemini':
-      return queryGemini(prompt) as Promise<LLMResponse>
-    case 'perplexity':
-      // TODO: Implement Perplexity when API is available
-      return {
-        provider: 'perplexity',
-        model: 'perplexity',
-        response: '',
-        tokens: 0,
-        latencyMs: 0,
-        error: 'Perplexity integration coming soon',
-      }
-    default:
-      throw new Error(`Unknown LLM provider: ${provider}`)
+  const startTime = Date.now()
+  
+  try {
+    switch (provider) {
+      case 'chatgpt':
+        return queryOpenAI(prompt)
+      case 'claude':
+        return queryAnthropic(prompt) as Promise<LLMResponse>
+      case 'gemini':
+        return queryGemini(prompt) as Promise<LLMResponse>
+      case 'perplexity':
+        const response = await queryPerplexity(prompt)
+        return {
+          provider: 'perplexity',
+          model: 'sonar',
+          response,
+          tokens: 0,
+          latencyMs: Date.now() - startTime,
+        }
+      default:
+        throw new Error(`Unknown LLM provider: ${provider}`)
+    }
+  } catch (error) {
+    return {
+      provider,
+      model: 'unknown',
+      response: '',
+      tokens: 0,
+      latencyMs: Date.now() - startTime,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
   }
 }
 
@@ -55,7 +68,7 @@ export async function queryLLM(
  */
 export async function queryAllLLMs(
   prompt: string,
-  providers: LLMProvider[] = ['chatgpt', 'claude', 'gemini']
+  providers: LLMProvider[] = ['chatgpt', 'claude', 'gemini', 'perplexity']
 ): Promise<LLMResponse[]> {
   const queries = providers.map(provider => queryLLM(provider, prompt))
   return Promise.all(queries)
@@ -91,7 +104,7 @@ export function parseAgentMention(
   const context = response.slice(start, end)
   
   // Simple sentiment analysis based on surrounding words
-  const positiveWords = ['best', 'top', 'excellent', 'recommended', 'highly', 'great', 'outstanding', 'premier']
+  const positiveWords = ['best', 'top', 'excellent', 'recommended', 'highly', 'great', 'outstanding', 'premier', 'expert', 'trusted']
   const negativeWords = ['avoid', 'not recommended', 'issues', 'problems', 'complaints']
   
   const contextLower = context.toLowerCase()
@@ -104,7 +117,6 @@ export function parseAgentMention(
   }
   
   // Calculate rank (simple: count how many names appear before this one)
-  // This is a simplified version - in production we'd use more sophisticated parsing
   const beforeMention = lowerResponse.slice(0, index)
   const numberedListMatches = beforeMention.match(/\d+\./g)
   const rank = numberedListMatches ? numberedListMatches.length + 1 : 1
@@ -114,7 +126,7 @@ export function parseAgentMention(
     rank,
     context,
     sentiment,
-    competitorsMentioned: [], // TODO: Extract other agent names
+    competitorsMentioned: [],
   }
 }
 
