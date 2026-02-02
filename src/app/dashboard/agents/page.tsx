@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Plus, Pencil } from 'lucide-react'
 import { supabaseAdmin } from '@/lib/supabase'
 import ScanButton from './scan-button'
 
@@ -34,7 +34,6 @@ export default async function AgentsPage() {
         .select('*')
         .eq('workspace_id', workspace.id)
         .order('created_at', { ascending: false })
-
       agents = data || []
     }
   }
@@ -66,11 +65,29 @@ export default async function AgentsPage() {
             <div key={agent.id} className="card">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-gray-900">{agent.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-gray-900">{agent.name}</h3>
+                    <Link 
+                      href={`/dashboard/agents/${agent.id}/edit`}
+                      className="text-gray-400 hover:text-notable-600 transition-colors"
+                      title="Edit agent"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Link>
+                  </div>
                   <p className="text-sm text-gray-500">{agent.brokerage}</p>
                   <p className="text-sm text-gray-500">{agent.city}, {agent.state}</p>
+                  {agent.property_types && agent.property_types.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {agent.property_types.map((type: string) => (
+                        <span key={type} className="px-2 py-0.5 text-xs bg-notable-100 text-notable-700 rounded">
+                          {type}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   {agent.last_scanned_at && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-400 mt-2">
                       Last scanned: {new Date(agent.last_scanned_at).toLocaleDateString()}
                     </p>
                   )}
