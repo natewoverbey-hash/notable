@@ -182,9 +182,12 @@ function extractCompetitors(response: string, excludeAgent: string): Array<{ nam
     'sullivans island', 'isle of palms', 'james island', 'johns island', 'west ashley',
     'networking events', 'open house', 'local agents', 'top agents', 'best agents',
     'real estate', 'luxury homes', 'waterfront', 'historic homes', 'local experts',
-    'client testimonials', 'search results', 'available data', 'current listings'
+    'client testimonials', 'search results', 'available data', 'current listings', 
   ]
-  
+  // Address patterns
+    'point rd', 'point road', 'street', 'avenue', 'blvd', 'boulevard', 'drive', 'lane', 'court', 'way', 'circle',
+    'long point', 'coleman blvd', 'johnnie dodds',
+  ]    
   // Common real estate brokerages (to extract but mark as brokerage, not agent)
   const knownBrokerages = [
     'keller williams', 'coldwell banker', 'carolina one', 're/max', 'remax',
@@ -218,6 +221,9 @@ function extractCompetitors(response: string, excludeAgent: string): Array<{ nam
     const words = name.split(' ')
     if (words.length < 2 || words.length > 4) continue
     if (/\d/.test(name)) continue
+
+    // Skip if looks like an address (contains road-related words)
+    if (/\b(rd|road|st|street|ave|avenue|blvd|dr|drive|ln|lane|ct|court|way|cir|circle)\b/i.test(name)) continue
     
     // Check if already added
     if (!competitors.find(c => c.name.toLowerCase() === lowerName)) {
