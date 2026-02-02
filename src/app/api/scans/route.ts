@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getUserSubscription, canRunScans } from '@/lib/subscription'
 import { queryAllLLMs, parseAgentMention, renderPrompt } from '@/lib/llm'
 import prompts from '@/lib/prompts/real-estate.json'
 
@@ -57,6 +58,15 @@ export async function POST(request: Request) {
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check subscription
+    const subscription = await getUserSubscription(userId)
+    if (!canRunScans(subscription)) {
+      return NextResponse.json(
+        { error: 'Upgrade to run scans', requiresUpgrade: true },
+        { status: 403 }
+      )
     }
 
     const body = await request.json()
