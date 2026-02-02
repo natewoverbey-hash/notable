@@ -168,64 +168,82 @@ function extractCompetitors(response: string, excludeAgent: string): Array<{ nam
   const competitors: Array<{ name: string; rank: number }> = []
   const lowerExclude = excludeAgent.toLowerCase()
   
-  // Pattern 1: Bold names like **Name** or **Name LastName**
-  const boldPattern = /\*\*([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\*\*/g
-  let match
+  // Words/phrases that are NOT competitor names
+  const falsePositives = [
+    'online platforms', 'google reviews', 'local recommendations', 'open houses',
+    'brokerage websites', 'local publications', 'local real estate', 'professional organizations',
+    'social media', 'word of mouth', 'local community', 'other notable', 'other agents',
+    'real estate agencies', 'online reviews', 'local forums', 'community boards',
+    'zillow', 'realtor.com', 'redfin', 'yelp', 'facebook', 'linkedin', 'google',
+    'charleston trident association', 'national association', 'mls data',
+    'note:', 'disclaimer', 'important', 'contact', 'recommended', 'steps to find',
+    'ways to find', 'methods', 'tips', 'suggestions'
+  ]
+  
+  // Common real estate brokerages (to extract but mark as brokerage, not agent)
+  const knownBrokerages = [
+    'keller williams', 'coldwell banker', 'carolina one', 're/max', 'remax',
+    'century 21', 'berkshire hathaway', 'sotheby', 'compass', 'exp realty',
+    'the cassina group', 'dunes properties', 'engel & völkers', 'engel and volkers'
+  ]
+  
   let rank = 1
+  
+  // Pattern 1: Bold names like **First Last** (most reliable for Perplexity)
+  const boldPattern = /\*\*([A-Z][a-z]+(?:\s[A-Z][a-z']+)+)\*\*/g
+  let match
   
   while ((match = boldPattern.exec(response)) !== null) {
     const name = match[1].trim()
-    // Skip if it's our agent or contains common non-name words
-    if (
-      !name.toLowerCase().includes(lowerExclude) &&
-      !name.toLowerCase().includes('other') &&
-      !name.toLowerCase().includes('notable') &&
-      !name.toLowerCase().includes('group') &&
-      !name.toLowerCase().includes('team') &&
-      !name.toLowerCase().includes('the cassina') &&
-      name.split(' ').length >= 2 // Must have at least first and last name
-    ) {
-      // Check if already added
-      if (!competitors.find(c => c.name.toLowerCase() === name.toLowerCase())) {
-        competitors.push({ name, rank })
-        rank++
-      }
+    const lowerName = name.toLowerCase()
+    
+    // Skip if it's our agent
+    if (lowerName.includes(lowerExclude) || lowerExclude.includes(lowerName)) continue
+    
+    // Skip false positives
+    if (falsePositives.some(fp => lowerName.includes(fp) || fp.includes(lowerName))) continue
+    
+    // Skip if it's just a brokerage name (no person name)
+    if (knownBrokerages.some(b => lowerName === b)) continue
+    
+    // Skip if contains certain words that indicate it's not a person
+    if (/\b(team|group|realty|real estate|properties|homes|inc|llc|company|association|organization|platform|website|review)\b/i.test(name)) continue
+    
+    // Must look like a person's name (2-3 words, no numbers)
+    const words = name.split(' ')
+    if (words.length < 2 || words.length > 4) continue
+    if (/\d/.test(name)) continue
+    
+    // Check if already added
+    if (!competitors.find(c => c.name.toLowerCase() === lowerName)) {
+      competitors.push({ name, rank })
+      rank++
     }
   }
   
-  // Pattern 2: Names with brokerages like "Name - Brokerage" or "Name of Brokerage"
-  const brokeragePattern = /([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s*(?:of|at|with|-|–)\s*(?:The\s)?([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)/g
+  // Pattern 2: "Name of/at/with Brokerage" pattern
+  const agentBrokeragePattern = /([A-Z][a-z]+\s[A-Z][a-z']+(?:\s[A-Z][a-z']+)?)\s*(?:of|at|with|,)\s*(?:The\s)?([A-Z][a-z]+(?:\s[A-Z][a-z]+)*(?:\s(?:Real Estate|Realty|Properties|Group|Team))?)/g
   
-  while ((match = brokeragePattern.exec(response)) !== null) {
+  while ((match = agentBrokeragePattern.exec(response)) !== null) {
     const name = match[1].trim()
-    if (
-      !name.toLowerCase().includes(lowerExclude) &&
-      name.split(' ').length >= 2
-    ) {
-      if (!competitors.find(c => c.name.toLowerCase() === name.toLowerCase())) {
-        competitors.push({ name, rank })
-        rank++
-      }
+    const lowerName = name.toLowerCase()
+    
+    // Same validations
+    if (lowerName.includes(lowerExclude) || lowerExclude.includes(lowerName)) continue
+    if (falsePositives.some(fp => lowerName.includes(fp))) continue
+    if (/\b(team|group|realty|real estate|properties)\b/i.test(name)) continue
+    
+    const words = name.split(' ')
+    if (words.length < 2 || words.length > 4) continue
+    if (/\d/.test(name)) continue
+    
+    if (!competitors.find(c => c.name.toLowerCase() === lowerName)) {
+      competitors.push({ name, rank })
+      rank++
     }
   }
   
-  // Pattern 3: Team names like "The X Team" or "X Group"
-  const teamPattern = /(?:The\s)?([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+(Team|Group|Realty|Real Estate)/g
-  
-  while ((match = teamPattern.exec(response)) !== null) {
-    const name = match[0].trim()
-    if (
-      !name.toLowerCase().includes(lowerExclude) &&
-      !name.toLowerCase().includes('cassina')
-    ) {
-      if (!competitors.find(c => c.name.toLowerCase() === name.toLowerCase())) {
-        competitors.push({ name, rank })
-        rank++
-      }
-    }
-  }
-  
-  return competitors.slice(0, 10) // Limit to top 10 competitors
+  return competitors.slice(0, 10)
 }
 /**
  * Fill in variables in a prompt template
