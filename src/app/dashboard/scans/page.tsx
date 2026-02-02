@@ -133,18 +133,21 @@ export default async function ScansPage() {
                 </p>
               </div>
 
-              {scan.competitors_mentioned && scan.competitors_mentioned.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <p className="text-sm font-medium text-gray-700 mb-1">Competitors Mentioned:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {scan.competitors_mentioned.map((comp: string, i: number) => (
-                      <span key={i} className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">
-                        {comp}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+             {scan.competitors_mentioned && scan.competitors_mentioned.length > 0 && (
+  <div className="mt-3 pt-3 border-t border-gray-100">
+    <p className="text-sm font-medium text-gray-700 mb-1">Competitors Mentioned:</p>
+    <div className="flex flex-wrap gap-2">
+      {scan.competitors_mentioned.map((comp: any, i: number) => (
+        <span key={i} className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">
+          {typeof comp === 'string' ? comp : comp.name}
+          {typeof comp === 'object' && comp.rank && (
+            <span className="ml-1 text-yellow-600">#{comp.rank}</span>
+          )}
+        </span>
+      ))}
+    </div>
+  </div>
+)}
             </div>
           ))}
         </div>
