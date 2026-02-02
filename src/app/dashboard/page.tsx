@@ -1,22 +1,73 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, TrendingUp, TrendingDown, Minus, AlertCircle } from 'lucide-react'
+import { ArrowRight, TrendingUp, TrendingDown, Minus, AlertCircle, Users, Search, Target } from 'lucide-react'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export default async function DashboardPage() {
-  const { userId } = auth()
+  const { userId } = await auth()
   
   if (!userId) {
     redirect('/sign-in')
   }
 
-  // TODO: Fetch real data from database
-  // For now, showing placeholder UI
-  const hasAgents = false // Will check database
+  // Get user's workspace and agents
+  const { data: user } = await supabaseAdmin
+    .from('users')
+    .select('id')
+    .eq('clerk_user_id', userId)
+    .single()
 
-  if (!hasAgents) {
+  let agents: any[] = []
+  let recentScans: any[] = []
+  let overallScore = 0
+
+  if (user) {
+    const { data: workspace } = await supabaseAdmin
+      .from('workspaces')
+      .select('id')
+      .eq('owner_id', user.id)
+      .single()
+
+    if (workspace) {
+      // Get agents
+      const { data: agentData } = await supabaseAdmin
+        .from('agents')
+        .select('*')
+        .eq('workspace_id', workspace.id)
+        .order('created_at', { ascending: false })
+
+      agents = agentData || []
+
+      // Calculate overall score (average of all agents)
+      if (agents.length > 0) {
+        const scores = agents.filter(a => a.visibility_score !== null).map(a => a.visibility_score)
+        if (scores.length > 0) {
+          overallScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+        }
+      }
+
+      // Get recent scans
+      const agentIds = agents.map(a => a.id)
+      if (agentIds.length > 0) {
+        const { data: scanData } = await supabaseAdmin
+          .from('scans')
+          .select('*')
+          .in('agent_id', agentIds)
+          .order('scanned_at', { ascending: false })
+          .limit(5)
+
+        recentScans = scanData || []
+      }
+    }
+  }
+
+  if (agents.length === 0) {
     return <EmptyState />
   }
+
+  // Get per-provider scores from recent scans
+  const providerScores = calculateProviderScores(recentScans)
 
   return (
     <div>
@@ -29,37 +80,128 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <ScoreCard 
           title="Overall Score"
-          score={72}
-          change={5}
-          trend="up"
+          score={overallScore}
+          change={0}
+          trend="neutral"
+        />
+        <ScoreCard 
+          title="Perplexity"
+          score={providerScores.perplexity}
+          change={0}
+          trend={providerScores.perplexity > 0 ? "up" : "neutral"}
         />
         <ScoreCard 
           title="ChatGPT"
-          score={85}
-          change={12}
-          trend="up"
+          score={providerScores.chatgpt}
+          change={0}
+          trend="neutral"
         />
         <ScoreCard 
           title="Claude"
-          score={68}
-          change={-3}
-          trend="down"
-        />
-        <ScoreCard 
-          title="Gemini"
-          score={54}
+          score={providerScores.claude}
           change={0}
           trend="neutral"
         />
       </div>
 
-      {/* Recent Activity */}
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="card flex items-center gap-4">
+          <div className="w-12 h-12 bg-notable-100 rounded-full flex items-center justify-center">
+            <Users className="h-6 w-6 text-notable-600" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-gray-900">{agents.length}</p>
+            <p className="text-sm text-gray-600">Agents Monitored</p>
+          </div>
+        </div>
+        <div className="card flex items-center gap-4">
+          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+            <Search className="h-6 w-6 text-green-600" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-gray-900">{recentScans.length > 0 ? '40' : '0'}</p>
+            <p className="text-sm text-gray-600">Prompts Scanned</p>
+          </div>
+        </div>
+        <div className="card flex items-center gap-4">
+          <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+            <Target className="h-6 w-6 text-yellow-600" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-gray-900">{recentScans.filter(s => s.mentioned).length}</p>
+            <p className="text-sm text-gray-600">Mentions Found</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Agents List */}
+      <div className="card mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Your Agents</h2>
+          <Link href="/dashboard/agents" className="text-notable-600 hover:text-notable-700 text-sm font-medium">
+            View All →
+          </Link>
+        </div>
+        <div className="space-y-3">
+          {agents.slice(0, 3).map((agent) => (
+            <div key={agent.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div>
+                <p className="font-medium text-gray-900">{agent.name}</p>
+                <p className="text-sm text-gray-500">{agent.city}, {agent.state}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xl font-bold text-notable-600">{agent.visibility_score ?? '--'}</p>
+                <p className="text-xs text-gray-500">Visibility Score</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent Scans */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Scans</h2>
-        <p className="text-gray-500">No scans yet. Add an agent to get started.</p>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Recent Scans</h2>
+          <Link href="/dashboard/scans" className="text-notable-600 hover:text-notable-700 text-sm font-medium">
+            View All →
+          </Link>
+        </div>
+        {recentScans.length === 0 ? (
+          <p className="text-gray-500">No scans yet. Run a scan from the Agents page.</p>
+        ) : (
+          <div className="space-y-2">
+            {recentScans.slice(0, 5).map((scan) => (
+              <div key={scan.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                <div className="flex items-center gap-3">
+                  <span className={`w-2 h-2 rounded-full ${scan.mentioned ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className="text-sm text-gray-600 truncate max-w-md">{scan.prompt_rendered}</span>
+                </div>
+                <span className="text-xs text-gray-400">{scan.llm_provider}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
+}
+
+function calculateProviderScores(scans: any[]) {
+  const providers = ['perplexity', 'chatgpt', 'claude', 'gemini']
+  const scores: Record<string, number> = {}
+
+  for (const provider of providers) {
+    const providerScans = scans.filter(s => s.llm_provider === provider)
+    if (providerScans.length > 0) {
+      const mentioned = providerScans.filter(s => s.mentioned).length
+      scores[provider] = Math.round((mentioned / providerScans.length) * 100)
+    } else {
+      scores[provider] = 0
+    }
+  }
+
+  return scores
 }
 
 function EmptyState() {
@@ -104,7 +246,7 @@ function ScoreCard({
           {trend === 'up' && <TrendingUp className="h-4 w-4 mr-1" />}
           {trend === 'down' && <TrendingDown className="h-4 w-4 mr-1" />}
           {trend === 'neutral' && <Minus className="h-4 w-4 mr-1" />}
-          {change > 0 ? '+' : ''}{change}
+          {change !== 0 && <span>{change > 0 ? '+' : ''}{change}</span>}
         </div>
       </div>
     </div>
