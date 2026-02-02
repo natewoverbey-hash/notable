@@ -5,6 +5,6 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 })
 
 export const PRICES = {
-  BETA_MONTHLY: process.env.STRIPE_BETA_MONTHLY_PRICE_ID!,
-  BETA_ANNUAL: process.env.STRIPE_BETA_ANNUAL_PRICE_ID!,
+  BETA_MONTHLY: 'price_1SwRe8BPHwuVGwffhQF5mFrI',
+  BETA_ANNUAL: 'price_1SwRegBPHwuVGwffbLvtxebL',
 }
