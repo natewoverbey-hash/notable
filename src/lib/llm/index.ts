@@ -177,7 +177,12 @@ function extractCompetitors(response: string, excludeAgent: string): Array<{ nam
     'zillow', 'realtor.com', 'redfin', 'yelp', 'facebook', 'linkedin', 'google',
     'charleston trident association', 'national association', 'mls data',
     'note:', 'disclaimer', 'important', 'contact', 'recommended', 'steps to find',
-    'ways to find', 'methods', 'tips', 'suggestions'
+    'ways to find', 'methods', 'tips', 'suggestions',
+    'old village', 'old mount pleasant', 'mount pleasant', 'charleston', 'daniel island',
+    'sullivans island', 'isle of palms', 'james island', 'johns island', 'west ashley',
+    'networking events', 'open house', 'local agents', 'top agents', 'best agents',
+    'real estate', 'luxury homes', 'waterfront', 'historic homes', 'local experts',
+    'client testimonials', 'search results', 'available data', 'current listings'
   ]
   
   // Common real estate brokerages (to extract but mark as brokerage, not agent)
