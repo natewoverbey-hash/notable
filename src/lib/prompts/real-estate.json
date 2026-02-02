@@ -1,5 +1,5 @@
 {
-  "version": "1.1",
+  "version": "1.2",
   "categories": [
     {
       "id": "direct-search",
@@ -38,140 +38,270 @@
       "category": "direct-search",
       "template": "Who are the top 5 real estate agents in {city}, {state}? Please list their names and brokerages.",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": [],
+      "is_general": true
     },
     {
       "id": 2,
       "category": "direct-search",
       "template": "I'm looking to buy a home in {city}, {state}. Can you recommend specific real estate agents by name?",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": [],
+      "is_general": true
     },
     {
       "id": 3,
       "category": "direct-search",
       "template": "Name the most successful real estate agents in {city}, {state} based on sales volume.",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": [],
+      "is_general": true
     },
     {
       "id": 4,
       "category": "direct-search",
       "template": "Who are the best-reviewed realtors in {city}, {state}? List at least 3 names.",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": [],
+      "is_general": true
     },
     {
       "id": 5,
       "category": "direct-search",
       "template": "Which real estate agents should I contact to buy a house in {city}, {state}? Give me specific names.",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": [],
+      "is_general": true
     },
     {
       "id": 6,
       "category": "neighborhood",
       "template": "Who are the top real estate agents that specialize in {neighborhood} in {city}, {state}? List their names.",
       "variables": ["neighborhood", "city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": [],
+      "is_general": true
     },
     {
       "id": 7,
       "category": "neighborhood",
       "template": "I want to buy a home in {neighborhood}, {city}. Which specific agents know this area best?",
       "variables": ["neighborhood", "city"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": [],
+      "is_general": true
     },
     {
       "id": 8,
       "category": "neighborhood",
       "template": "Name the realtors who have sold the most homes in {neighborhood}, {city}, {state}.",
       "variables": ["neighborhood", "city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": [],
+      "is_general": true
     },
     {
       "id": 9,
       "category": "specialty",
       "template": "Who are the best luxury real estate agents in {city}, {state}? List names and contact info.",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": ["Luxury"],
+      "buyer_types": [],
+      "is_general": false
     },
     {
       "id": 10,
       "category": "specialty",
       "template": "Which agents specialize in waterfront properties in {city}, {state}? Give me specific names.",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": ["Waterfront"],
+      "buyer_types": [],
+      "is_general": false
     },
     {
       "id": 11,
       "category": "specialty",
       "template": "Name the top agents for historic homes in {city}, {state}.",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": ["Historic Homes"],
+      "buyer_types": [],
+      "is_general": false
     },
     {
       "id": 12,
       "category": "specialty",
       "template": "Who are the best real estate agents for first-time home buyers in {city}, {state}? List their names.",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": ["First-Time Buyers"],
+      "is_general": false
     },
     {
       "id": 13,
       "category": "investment",
       "template": "Which real estate agents in {city}, {state} specialize in investment properties? Name them.",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": ["Investment/Rental"],
+      "buyer_types": ["Investors"],
+      "is_general": false
     },
     {
       "id": 14,
       "category": "investment",
       "template": "I'm looking for a realtor who works with real estate investors in {city}, {state}. Who do you recommend by name?",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": ["Investment/Rental"],
+      "buyer_types": ["Investors"],
+      "is_general": false
     },
     {
       "id": 15,
       "category": "luxury",
-      "template": "Who are the top luxury home agents in {city}, {state} for properties over $1 million? List specific names.",
-      "variables": ["city", "state"],
-      "intent": "high"
+      "template": "Who are the top luxury home agents in {city}, {state} for properties over {luxury_threshold}? List specific names.",
+      "variables": ["city", "state", "luxury_threshold"],
+      "intent": "high",
+      "property_types": ["Luxury"],
+      "buyer_types": [],
+      "is_general": false
     },
     {
       "id": 16,
       "category": "luxury",
       "template": "Name the best high-end real estate agents in {city}, {state}.",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": ["Luxury"],
+      "buyer_types": [],
+      "is_general": false
     },
     {
       "id": 17,
       "category": "reputation",
       "template": "Who are the most trusted real estate agents in {city}, {state}? I want specific names and their brokerages.",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": [],
+      "is_general": true
     },
     {
       "id": 18,
       "category": "reputation",
       "template": "Which realtors have the best reputation in {city}, {state}? List at least 5 names.",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": [],
+      "is_general": true
     },
     {
       "id": 19,
       "category": "neighborhood",
       "template": "List the real estate agents who are experts in {neighborhood}. Include their names and brokerages.",
       "variables": ["neighborhood"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": [],
+      "is_general": true
     },
     {
       "id": 20,
       "category": "direct-search",
       "template": "Give me a list of the top 10 real estate agents in {city}, {state} with their contact information.",
       "variables": ["city", "state"],
-      "intent": "high"
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": [],
+      "is_general": true
+    },
+    {
+      "id": 21,
+      "category": "specialty",
+      "template": "Who are the best agents for condos and townhomes in {city}, {state}? List their names.",
+      "variables": ["city", "state"],
+      "intent": "high",
+      "property_types": ["Condos/Townhomes"],
+      "buyer_types": [],
+      "is_general": false
+    },
+    {
+      "id": 22,
+      "category": "specialty",
+      "template": "Which real estate agents specialize in new construction homes in {city}, {state}?",
+      "variables": ["city", "state"],
+      "intent": "high",
+      "property_types": ["New Construction"],
+      "buyer_types": [],
+      "is_general": false
+    },
+    {
+      "id": 23,
+      "category": "specialty",
+      "template": "Name the top agents for land and lots for sale in {city}, {state}.",
+      "variables": ["city", "state"],
+      "intent": "high",
+      "property_types": ["Land/Lots"],
+      "buyer_types": [],
+      "is_general": false
+    },
+    {
+      "id": 24,
+      "category": "specialty",
+      "template": "Who are the best relocation specialists and real estate agents in {city}, {state}?",
+      "variables": ["city", "state"],
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": ["Relocations"],
+      "is_general": false
+    },
+    {
+      "id": 25,
+      "category": "specialty",
+      "template": "Which agents in {city}, {state} are best for retirees and downsizers? List names.",
+      "variables": ["city", "state"],
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": ["Downsizers/Retirees"],
+      "is_general": false
+    },
+    {
+      "id": 26,
+      "category": "specialty",
+      "template": "Who are the best military and VA loan real estate agents in {city}, {state}?",
+      "variables": ["city", "state"],
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": ["Military/VA"],
+      "is_general": false
+    },
+    {
+      "id": 27,
+      "category": "specialty",
+      "template": "Which agents specialize in vacation homes and second properties in {city}, {state}?",
+      "variables": ["city", "state"],
+      "intent": "high",
+      "property_types": [],
+      "buyer_types": ["Second Home/Vacation"],
+      "is_general": false
     }
   ]
 }
