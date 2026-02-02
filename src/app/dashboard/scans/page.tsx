@@ -122,14 +122,14 @@ export default async function ScansPage() {
               
               <div className="mb-3">
                 <p className="text-sm font-medium text-gray-700 mb-1">Prompt:</p>
-                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">{scan.prompt_text}</p>
+                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">{scan.prompt_rendered}</p>
               </div>
 
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-1">Response:</p>
                 <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded max-h-32 overflow-y-auto">
-                  {scan.response_text?.substring(0, 500)}
-                  {scan.response_text?.length > 500 && '...'}
+                  {scan.response_raw?.substring(0, 500)}
+                  {scan.response_raw?.length > 500 && '...'}
                 </p>
               </div>
 
