@@ -186,7 +186,6 @@ function extractCompetitors(response: string, excludeAgent: string): Array<{ nam
     // Address patterns
     'point rd', 'point road', 'street', 'avenue', 'blvd', 'boulevard', 'drive', 'lane', 'court', 'way', 'circle',
     'long point', 'coleman blvd', 'johnnie dodds'
-  ]
   ]    
   // Common real estate brokerages (to extract but mark as brokerage, not agent)
   const knownBrokerages = [
