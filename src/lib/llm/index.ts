@@ -182,11 +182,11 @@ function extractCompetitors(response: string, excludeAgent: string): Array<{ nam
     'sullivans island', 'isle of palms', 'james island', 'johns island', 'west ashley',
     'networking events', 'open house', 'local agents', 'top agents', 'best agents',
     'real estate', 'luxury homes', 'waterfront', 'historic homes', 'local experts',
-    'client testimonials', 'search results', 'available data', 'current listings', 
-  ]
-  // Address patterns
+    'client testimonials', 'search results', 'available data', 'current listings',
+    // Address patterns
     'point rd', 'point road', 'street', 'avenue', 'blvd', 'boulevard', 'drive', 'lane', 'court', 'way', 'circle',
-    'long point', 'coleman blvd', 'johnnie dodds',
+    'long point', 'coleman blvd', 'johnnie dodds'
+  ]
   ]    
   // Common real estate brokerages (to extract but mark as brokerage, not agent)
   const knownBrokerages = [
