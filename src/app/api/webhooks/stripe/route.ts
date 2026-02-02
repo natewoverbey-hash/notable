@@ -1,11 +1,19 @@
 import { NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase'
 import Stripe from 'stripe'
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2023-10-16',
+})
+
 export async function POST(request: Request) {
   const body = await request.text()
-  const signature = request.headers.get('stripe-signature')!
+  const signature = request.headers.get('stripe-signature')
+
+  if (!signature) {
+    console.error('No stripe-signature header')
+    return NextResponse.json({ error: 'No signature' }, { status: 400 })
+  }
 
   let event: Stripe.Event
 
@@ -17,8 +25,12 @@ export async function POST(request: Request) {
     )
   } catch (err: any) {
     console.error('Webhook signature verification failed:', err.message)
+    console.error('Signature received:', signature.substring(0, 50) + '...')
+    console.error('Webhook secret starts with:', process.env.STRIPE_WEBHOOK_SECRET?.substring(0, 10) + '...')
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
+
+  console.log('Webhook received:', event.type)
 
   try {
     switch (event.type) {
@@ -28,19 +40,18 @@ export async function POST(request: Request) {
         const customerId = session.customer as string
         const subscriptionId = session.subscription as string
 
+        console.log('Processing checkout for clerk user:', clerkUserId)
+
         if (clerkUserId) {
-          // Get subscription details
           const subscription = await stripe.subscriptions.retrieve(subscriptionId)
           const priceId = subscription.items.data[0]?.price.id
           
-          // Determine plan based on price
           let plan = 'beta'
-          if (priceId === process.env.STRIPE_BETA_ANNUAL_PRICE_ID) {
+          if (priceId === 'price_1SwRegBPHwuVGwffbLvtxebL') {
             plan = 'beta_annual'
           }
 
-          // Update user in database
-          await supabaseAdmin
+          const { error } = await supabaseAdmin
             .from('users')
             .update({
               stripe_customer_id: customerId,
@@ -50,7 +61,11 @@ export async function POST(request: Request) {
             })
             .eq('clerk_user_id', clerkUserId)
 
-          console.log(`Subscription activated for user ${clerkUserId}`)
+          if (error) {
+            console.error('Supabase update error:', error)
+          } else {
+            console.log(`Subscription activated for user ${clerkUserId}`)
+          }
         }
         break
       }
@@ -58,14 +73,11 @@ export async function POST(request: Request) {
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription
         const customerId = subscription.customer as string
-
         const status = subscription.status === 'active' ? 'active' : subscription.status
 
         await supabaseAdmin
           .from('users')
-          .update({
-            subscription_status: status,
-          })
+          .update({ subscription_status: status })
           .eq('stripe_customer_id', customerId)
 
         console.log(`Subscription updated for customer ${customerId}: ${status}`)
@@ -94,9 +106,7 @@ export async function POST(request: Request) {
 
         await supabaseAdmin
           .from('users')
-          .update({
-            subscription_status: 'past_due',
-          })
+          .update({ subscription_status: 'past_due' })
           .eq('stripe_customer_id', customerId)
 
         console.log(`Payment failed for customer ${customerId}`)
