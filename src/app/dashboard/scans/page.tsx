@@ -15,6 +15,8 @@ export default async function ScansPage() {
   // Check subscription
   const subscription = await getUserSubscription(userId)
   
+  const showUpgradeBanner = !subscription.isActive && subscription.hasUsedFreeScan
+
   if (!canViewScans(subscription)) {
     return (
       <div>
@@ -24,7 +26,7 @@ export default async function ScansPage() {
         </div>
         <UpgradePrompt 
           feature="Scan Results" 
-          description="See exactly what ChatGPT, Claude, Gemini, and Perplexity say when people search for agents in your area."
+          description="Run your first free scan to see what AI assistants say about you."
         />
       </div>
     )
@@ -110,6 +112,20 @@ export default async function ScansPage() {
         <h1 className="text-2xl font-bold text-gray-900">Scan Results</h1>
         <p className="text-gray-600">See what AI assistants are saying about your agents</p>
       </div>
+
+      {showUpgradeBanner && (
+        <div className="mb-6 p-4 bg-gradient-to-r from-notable-500 to-notable-600 rounded-lg text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold">You've used your free scan!</h3>
+              <p className="text-sm text-notable-100">Upgrade to run weekly scans and track your progress over time.</p>
+            </div>
+            <a href="/pricing" className="px-4 py-2 bg-white text-notable-600 font-medium rounded-lg hover:bg-notable-50 transition-colors">
+              Upgrade Now
+            </a>
+          </div>
+        </div>
+      )}
 
       {scans.length === 0 ? (
         <div className="card text-center py-12">
