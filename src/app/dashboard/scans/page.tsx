@@ -1,6 +1,8 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getUserSubscription, canViewScans } from '@/lib/subscription'
+import UpgradePrompt from '@/components/upgrade-prompt'
 import { MessageSquare, Bot, Sparkles } from 'lucide-react'
 
 export default async function ScansPage() {
@@ -8,6 +10,24 @@ export default async function ScansPage() {
   
   if (!userId) {
     redirect('/sign-in')
+  }
+
+  // Check subscription
+  const subscription = await getUserSubscription(userId)
+  
+  if (!canViewScans(subscription)) {
+    return (
+      <div>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Scan Results</h1>
+          <p className="text-gray-600">See what AI assistants are saying about your agents</p>
+        </div>
+        <UpgradePrompt 
+          feature="Scan Results" 
+          description="See exactly what ChatGPT, Claude, Gemini, and Perplexity say when people search for agents in your area."
+        />
+      </div>
+    )
   }
 
   // Get user's workspace
@@ -28,7 +48,6 @@ export default async function ScansPage() {
       .single()
 
     if (workspace) {
-      // Get agents for this workspace
       const { data: agentData } = await supabaseAdmin
         .from('agents')
         .select('id, name')
@@ -38,7 +57,6 @@ export default async function ScansPage() {
       const agentIds = agents.map(a => a.id)
 
       if (agentIds.length > 0) {
-        // Get scans for these agents
         const { data: scanData } = await supabaseAdmin
           .from('scans')
           .select('*')
@@ -58,9 +76,11 @@ export default async function ScansPage() {
 
   const getProviderIcon = (provider: string) => {
     switch (provider) {
-      case 'openai':
+      case 'perplexity':
+        return <Sparkles className="h-4 w-4 text-blue-600" />
+      case 'chatgpt':
         return <Sparkles className="h-4 w-4 text-green-600" />
-      case 'anthropic':
+      case 'claude':
         return <Bot className="h-4 w-4 text-orange-600" />
       case 'gemini':
         return <MessageSquare className="h-4 w-4 text-blue-600" />
@@ -71,12 +91,14 @@ export default async function ScansPage() {
 
   const getProviderName = (provider: string) => {
     switch (provider) {
-      case 'openai':
+      case 'chatgpt':
         return 'ChatGPT'
-      case 'anthropic':
+      case 'claude':
         return 'Claude'
       case 'gemini':
         return 'Gemini'
+      case 'perplexity':
+        return 'Perplexity'
       default:
         return provider
     }
@@ -133,21 +155,21 @@ export default async function ScansPage() {
                 </p>
               </div>
 
-             {scan.competitors_mentioned && scan.competitors_mentioned.length > 0 && (
-  <div className="mt-3 pt-3 border-t border-gray-100">
-    <p className="text-sm font-medium text-gray-700 mb-1">Competitors Mentioned:</p>
-    <div className="flex flex-wrap gap-2">
-      {scan.competitors_mentioned.map((comp: any, i: number) => (
-        <span key={i} className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">
-          {typeof comp === 'string' ? comp : comp.name}
-          {typeof comp === 'object' && comp.rank && (
-            <span className="ml-1 text-yellow-600">#{comp.rank}</span>
-          )}
-        </span>
-      ))}
-    </div>
-  </div>
-)}
+              {scan.competitors_mentioned && scan.competitors_mentioned.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-sm font-medium text-gray-700 mb-1">Competitors Mentioned:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {scan.competitors_mentioned.map((comp: any, i: number) => (
+                      <span key={i} className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">
+                        {typeof comp === 'string' ? comp : comp.name}
+                        {typeof comp === 'object' && comp.rank && (
+                          <span className="ml-1 text-yellow-600">#{comp.rank}</span>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
