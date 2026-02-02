@@ -1,28 +1,29 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { RefreshCw } from 'lucide-react'
 
 export default function ScanButton({ agentId }: { agentId: string }) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<{ score: number; scans: number } | null>(null)
 
   const runScan = async () => {
     setLoading(true)
-    setResult(null)
-
     try {
       const res = await fetch('/api/scans', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ agentId }),
       })
-
       const data = await res.json()
-
+      
+      if (data.requiresUpgrade) {
+        router.push('/pricing')
+        return
+      }
+      
       if (res.ok) {
-        setResult({ score: data.visibilityScore, scans: data.scansCompleted })
-        // Refresh the page to show updated score
         window.location.reload()
       } else {
         alert(data.error || 'Scan failed')
