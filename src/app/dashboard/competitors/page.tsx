@@ -22,6 +22,7 @@ export default async function CompetitorsPage() {
 
   // Check subscription
   const subscription = await getUserSubscription(userId)
+  const showUpgradeBanner = !subscription.isActive && subscription.hasUsedFreeScan
   
   if (!canViewCompetitors(subscription)) {
     return (
@@ -129,6 +130,20 @@ export default async function CompetitorsPage() {
         <h1 className="text-2xl font-bold text-gray-900">Competitors</h1>
         <p className="text-gray-600">See who's showing up instead of {agentName || 'your agents'}</p>
       </div>
+
+      {showUpgradeBanner && (
+        <div className="mb-6 p-4 bg-gradient-to-r from-notable-500 to-notable-600 rounded-lg text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold">You've used your free scan!</h3>
+              <p className="text-sm text-notable-100">Upgrade to track competitors weekly and get actionable insights.</p>
+            </div>
+            <a href="/pricing" className="px-4 py-2 bg-white text-notable-600 font-medium rounded-lg hover:bg-notable-50 transition-colors">
+              Upgrade Now
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
