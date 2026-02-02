@@ -64,9 +64,17 @@ export async function POST(request: Request) {
     const subscription = await getUserSubscription(userId)
     if (!canRunScans(subscription)) {
       return NextResponse.json(
-        { error: 'Upgrade to run scans', requiresUpgrade: true },
+        { error: 'You\'ve used your free scan. Upgrade to run more scans.', requiresUpgrade: true },
         { status: 403 }
       )
+    }
+
+    // Mark free scan as used for non-subscribers
+    if (!subscription.isActive && !subscription.hasUsedFreeScan) {
+      await supabaseAdmin
+        .from('users')
+        .update({ has_used_free_scan: true })
+        .eq('clerk_user_id', userId)
     }
 
     const body = await request.json()
