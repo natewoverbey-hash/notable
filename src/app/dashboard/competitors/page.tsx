@@ -1,7 +1,9 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { supabaseAdmin } from '@/lib/supabase'
-import { Users, TrendingUp, Building2, AlertTriangle } from 'lucide-react'
+import { getUserSubscription, canViewCompetitors } from '@/lib/subscription'
+import UpgradePrompt from '@/components/upgrade-prompt'
+import { Users, TrendingUp, AlertTriangle } from 'lucide-react'
 
 interface Competitor {
   name: string
@@ -11,17 +13,29 @@ interface Competitor {
   llmProviders: string[]
 }
 
-interface BrokerageData {
-  name: string
-  agents: string[]
-  totalMentions: number
-}
-
 export default async function CompetitorsPage() {
   const { userId } = await auth()
   
   if (!userId) {
     redirect('/sign-in')
+  }
+
+  // Check subscription
+  const subscription = await getUserSubscription(userId)
+  
+  if (!canViewCompetitors(subscription)) {
+    return (
+      <div>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Competitors</h1>
+          <p className="text-gray-600">See who's showing up instead of your agents</p>
+        </div>
+        <UpgradePrompt 
+          feature="Competitor Intelligence" 
+          description="Discover which agents are being recommended instead of you, track their rankings across all AI platforms, and find opportunities to improve."
+        />
+      </div>
+    )
   }
 
   // Get user's agents
@@ -32,7 +46,6 @@ export default async function CompetitorsPage() {
     .single()
 
   let competitors: Competitor[] = []
-  let brokerages: BrokerageData[] = []
   let totalScans = 0
   let agentName = ''
 
@@ -53,7 +66,6 @@ export default async function CompetitorsPage() {
         agentName = agents[0].name
         const agentIds = agents.map(a => a.id)
 
-        // Get all scans with competitors mentioned
         const { data: scans } = await supabaseAdmin
           .from('scans')
           .select('competitors_mentioned, prompt_rendered, llm_provider')
@@ -64,7 +76,6 @@ export default async function CompetitorsPage() {
 
         totalScans = scans?.length || 0
 
-        // Aggregate competitor data
         const competitorMap = new Map<string, {
           mentions: number
           ranks: number[]
@@ -98,7 +109,6 @@ export default async function CompetitorsPage() {
           }
         })
 
-        // Convert to array and sort by mentions
         competitors = Array.from(competitorMap.entries())
           .map(([name, data]) => ({
             name,
@@ -109,21 +119,6 @@ export default async function CompetitorsPage() {
           }))
           .sort((a, b) => b.mentions - a.mentions)
           .slice(0, 20)
-
-        // Extract brokerages from competitor names (basic pattern matching)
-        const brokerageMap = new Map<string, Set<string>>()
-        const knownBrokerages = [
-          'William Means', 'Carolina One', 'Keller Williams', 'Coldwell Banker',
-          'The Cassina Group', 'Dunes Properties', 'RE/MAX', 'Century 21',
-          'Berkshire Hathaway', 'Sotheby', 'Compass', 'EXP Realty', 'Engel'
-        ]
-
-        scans?.forEach(scan => {
-          const response = scan.prompt_rendered || ''
-          knownBrokerages.forEach(brokerage => {
-            // This is simplified - in production you'd parse the response_raw
-          })
-        })
       }
     }
   }
