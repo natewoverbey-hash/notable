@@ -52,8 +52,8 @@ export async function POST(request: Request) {
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?upgraded=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
+      success_url: 'https://notable-nine.vercel.app/dashboard?upgraded=true',
+      cancel_url: 'https://notable-nine.vercel.app/pricing',
       metadata: {
         clerk_user_id: userId,
       },
