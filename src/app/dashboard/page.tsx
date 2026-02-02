@@ -47,7 +47,7 @@ export default async function DashboardPage() {
         }
       }
 
-      // Get recent scans
+      // Get recent scans (more for accurate stats)
       const agentIds = agents.map(a => a.id)
       if (agentIds.length > 0) {
         const { data: scanData } = await supabaseAdmin
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
           .select('*')
           .in('agent_id', agentIds)
           .order('scanned_at', { ascending: false })
-          .limit(5)
+          .limit(100)
 
         recentScans = scanData || []
       }
