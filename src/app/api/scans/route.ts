@@ -4,9 +4,69 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { queryAllLLMs, parseAgentMention, renderPrompt } from '@/lib/llm'
 import prompts from '@/lib/prompts/real-estate.json'
 
+interface Prompt {
+  id: number
+  category: string
+  template: string
+  variables: string[]
+  intent: string
+  property_types: string[]
+  buyer_types: string[]
+  is_general: boolean
+}
+
+/**
+ * Filter prompts based on agent's specialties
+ */
+function filterPromptsForAgent(
+  allPrompts: Prompt[],
+  agentPropertyTypes: string[],
+  agentBuyerTypes: string[]
+): Prompt[] {
+  return allPrompts.filter(prompt => {
+    // Always include general prompts
+    if (prompt.is_general) {
+      return true
+    }
+
+    // Include if agent has matching property type
+    if (prompt.property_types && prompt.property_types.length > 0) {
+      const hasMatchingPropertyType = prompt.property_types.some(pt => 
+        agentPropertyTypes.includes(pt)
+      )
+      if (hasMatchingPropertyType) {
+        return true
+      }
+    }
+
+    // Include if agent has matching buyer type
+    if (prompt.buyer_types && prompt.buyer_types.length > 0) {
+      const hasMatchingBuyerType = prompt.buyer_types.some(bt => 
+        agentBuyerTypes.includes(bt)
+      )
+      if (hasMatchingBuyerType) {
+        return true
+      }
+    }
+
+    // Exclude specialty prompts that don't match agent's focus
+    return false
+  })
+}
+
+/**
+ * Format luxury threshold for prompt rendering
+ */
+function formatLuxuryThreshold(threshold: number): string {
+  if (threshold >= 1000000) {
+    return `$${threshold / 1000000}M`
+  }
+  return `$${threshold / 1000}K`
+}
+
 export async function POST(request: Request) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -30,136 +90,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 })
     }
 
+    // Filter prompts based on agent's specialties
+    const agentPropertyTypes = agent.property_types || []
+    const agentBuyerTypes = agent.buyer_types || []
+    const filteredPrompts = filterPromptsForAgent(
+      prompts.prompts as Prompt[],
+      agentPropertyTypes,
+      agentBuyerTypes
+    )
+
+    console.log(`Agent ${agent.name}: Running ${filteredPrompts.length} prompts (filtered from ${prompts.prompts.length})`)
+    console.log(`Property types: ${agentPropertyTypes.join(', ') || 'none'}`)
+    console.log(`Buyer types: ${agentBuyerTypes.join(', ') || 'none'}`)
+
     // Create a scan batch
     const { data: batch, error: batchError } = await supabaseAdmin
-      .from('scan_batches')
-      .insert({
-        workspace_id: agent.workspace_id,
-        agent_id: agentId,
-        status: 'running',
-        prompts_total: prompts.prompts.length,
-        started_at: new Date().toISOString(),
-      })
-      .select()
-      .single()
-
-    if (batchError) {
-      console.error('Error creating batch:', batchError)
-      return NextResponse.json({ error: 'Failed to create scan batch' }, { status: 500 })
-    }
-
-    // Prepare variables for prompt rendering
-    const variables = {
-      city: agent.city,
-      state: agent.state,
-      agent_name: agent.name,
-      brokerage: agent.brokerage || '',
-      neighborhood: agent.neighborhoods?.[0] || agent.city,
-      county: `${agent.city} County`, // Simplified
-      zip_code: agent.zip_codes?.[0] || '',
-      school_district: agent.city,
-      subdivision: agent.neighborhoods?.[0] || agent.city,
-      competitor_name: '', // TODO: Get from competitors
-    }
-
-    // Run scans for a subset of prompts (to start)
-    // In production, this would be queued and processed by a worker
-    const promptsToRun = prompts.prompts.slice(0, 10) // Start with first 10
-    const providers = ['chatgpt', 'claude', 'gemini', 'perplexity'] as const
-
-    let completed = 0
-    const results = []
-
-    for (const prompt of promptsToRun) {
-      const renderedPrompt = renderPrompt(prompt.template, variables)
-      
-      // Query all LLM providers
-      const responses = await queryAllLLMs(renderedPrompt, [...providers])
-      
-      for (const response of responses) {
-        // Parse the response to check if agent was mentioned
-        const mention = parseAgentMention(response.response, agent.name)
-        
-        // Save the scan result
-        const { data: scan, error: scanError } = await supabaseAdmin
-          .from('scans')
-          .insert({
-            batch_id: batch.id,
-            agent_id: agentId,
-            prompt_id: prompt.id,
-            prompt_rendered: renderedPrompt,
-            llm_provider: response.provider,
-            llm_model: response.model,
-            response_raw: response.response,
-            response_tokens: response.tokens,
-            mentioned: mention.mentioned,
-            mention_rank: mention.rank,
-            mention_context: mention.context,
-            sentiment: mention.sentiment,
-            competitors_mentioned: mention.competitorsMentioned,
-            latency_ms: response.latencyMs,
-            error_message: response.error,
-          })
-          .select()
-          .single()
-
-        if (!scanError) {
-          results.push(scan)
-        }
-      }
-
-      completed++
-      
-      // Update batch progress
-      await supabaseAdmin
-        .from('scan_batches')
-        .update({ prompts_completed: completed })
-        .eq('id', batch.id)
-    }
-
-    // Calculate visibility score
-    const totalScans = results.length
-    const mentionedScans = results.filter(r => r.mentioned).length
-    const visibilityScore = totalScans > 0 
-      ? Math.round((mentionedScans / totalScans) * 100)
-      : 0
-
-    // Update batch as completed
-    await supabaseAdmin
-      .from('scan_batches')
-      .update({ 
-        status: 'completed',
-        completed_at: new Date().toISOString(),
-      })
-      .eq('id', batch.id)
-
-    // Update agent's visibility score
-    await supabaseAdmin
-      .from('agents')
-      .update({ 
-        visibility_score: visibilityScore,
-        last_scanned_at: new Date().toISOString(),
-      })
-      .eq('id', agentId)
-
-    // Save to visibility_scores for trending
-    await supabaseAdmin
-      .from('visibility_scores')
-      .insert({
-        agent_id: agentId,
-        overall_score: visibilityScore,
-        prompts_checked: promptsToRun.length,
-        prompts_mentioned: mentionedScans,
-      })
-
-    return NextResponse.json({ 
-      batch,
-      visibilityScore,
-      scansCompleted: results.length,
-      mentions: mentionedScans,
-    })
-  } catch (error) {
-    console.error('Error in POST /api/scans:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+      .fro
