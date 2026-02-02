@@ -4,14 +4,24 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: Request) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
-    const { name, brokerage, city, state, neighborhoods, websiteUrl } = body
+    const { 
+      name, 
+      brokerage, 
+      city, 
+      state, 
+      neighborhoods, 
+      website_url,
+      property_types,
+      buyer_types,
+      luxury_threshold 
+    } = body
 
     // Validate required fields
     if (!name || !city || !state) {
@@ -32,7 +42,7 @@ export async function POST(request: Request) {
       // Create user if doesn't exist
       const { data: newUser, error: createError } = await supabaseAdmin
         .from('users')
-        .insert({ clerk_user_id: userId, email: '' }) // Email will be synced via webhook
+        .insert({ clerk_user_id: userId, email: '' })
         .select('id')
         .single()
       
@@ -79,7 +89,10 @@ export async function POST(request: Request) {
         city,
         state,
         neighborhoods: neighborhoods || [],
-        website_url: websiteUrl || null,
+        website_url: website_url || null,
+        property_types: property_types || [],
+        buyer_types: buyer_types || [],
+        luxury_threshold: luxury_threshold || 1000000,
         is_primary: true,
       })
       .select()
@@ -99,7 +112,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
