@@ -15,16 +15,18 @@ export async function queryGemini(prompt: string): Promise<LLMResponse> {
   const startTime = Date.now()
 
   try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+
+    // Use generateContent with Google Search grounding
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       tools: [
         {
           googleSearch: {},
         } as any,
       ],
-    })
+    } as any)
 
-    const result = await model.generateContent(prompt)
     const response = await result.response
     const text = response.text()
 
