@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, TrendingUp, TrendingDown, Minus, AlertCircle, Users, Search, Target, Lightbulb, Play, Eye } from 'lucide-react'
+import { ArrowRight, TrendingUp, TrendingDown, Minus, AlertCircle, Users, Search, Target, Play, Eye } from 'lucide-react'
 import { supabaseAdmin } from '@/lib/supabase'
 import { analyzeScans, generateRecommendations } from '@/lib/recommendations'
 import Recommendations from '@/components/recommendations'
@@ -259,13 +259,6 @@ export default async function DashboardPage() {
       {/* Recommendations Section */}
       {recentScans.length > 0 && recommendations.length > 0 && (
         <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Lightbulb className="h-5 w-5 text-yellow-500" />
-            <h2 className="text-lg font-semibold text-gray-900">Recommendations</h2>
-            <span className="px-2 py-0.5 text-xs bg-yellow-100 text-yellow-700 rounded-full">
-              {recommendations.length} actions
-            </span>
-          </div>
           <Recommendations recommendations={recommendations} />
         </div>
       )}
