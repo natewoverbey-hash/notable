@@ -125,7 +125,7 @@ export default async function DashboardPage() {
       </div>
       
       {/* Score Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         <ScoreCard 
           title="Overall Score"
           score={overallScore}
@@ -143,13 +143,19 @@ export default async function DashboardPage() {
           title="ChatGPT"
           score={providerScores.chatgpt}
           change={0}
-          trend="neutral"
+          trend={providerScores.chatgpt > 0 ? "up" : "neutral"}
         />
         <ScoreCard 
           title="Claude"
           score={providerScores.claude}
           change={0}
-          trend="neutral"
+          trend={providerScores.claude > 0 ? "up" : "neutral"}
+        />
+        <ScoreCard 
+          title="Gemini"
+          score={providerScores.gemini}
+          change={0}
+          trend={providerScores.gemini > 0 ? "up" : "neutral"}
         />
       </div>
 
