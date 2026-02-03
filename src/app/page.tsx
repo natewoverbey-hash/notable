@@ -224,8 +224,8 @@ export default function HomePage() {
           <div className="flex items-center justify-center gap-3">
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-notable-600 font-bold">JK</div>
             <div className="text-left">
-              <p className="text-white font-semibold">Jackie Kelly</p>
-              <p className="text-notable-200">The Cassina Group, Charleston SC</p>
+              <p className="text-white font-semibold">Top 5 Performing Agent</p>
+              <p className="text-notable-200">Top-Performing Boutique firm with over $481M in sales in 2023, Charleston SC</p>
             </div>
           </div>
         </div>
