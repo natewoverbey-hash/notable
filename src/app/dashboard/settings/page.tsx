@@ -23,7 +23,7 @@ export default async function SettingsPage() {
   const statusColor = user?.subscription_status === 'active' ? 'text-green-600 bg-green-100' :
                       user?.subscription_status === 'past_due' ? 'text-yellow-600 bg-yellow-100' :
                       user?.subscription_status === 'canceled' ? 'text-red-600 bg-red-100' :
-                      'text-gray-600 bg-gray-100'
+                      'text-gray-600 bg-gray-100';
 
   return (
     <div>
@@ -33,7 +33,6 @@ export default async function SettingsPage() {
       </div>
 
       <div className="max-w-2xl space-y-6">
-        {/* Account Info */}
         <div className="card">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <User className="h-5 w-5 text-gray-500" />
@@ -53,7 +52,6 @@ export default async function SettingsPage() {
           </div>
         </div>
 
-        {/* Subscription */}
         <div className="card">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-gray-500" />
@@ -88,7 +86,6 @@ export default async function SettingsPage() {
           </div>
         </div>
 
-        {/* Usage */}
         <div className="card">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Calendar className="h-5 w-5 text-gray-500" />
@@ -108,11 +105,10 @@ export default async function SettingsPage() {
           </div>
         </div>
 
-        {/* Support */}
         <div className="card">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Need Help?</h2>
           <p className="text-gray-600 mb-4">
-            Have questions or feedback? We'd love to hear from you.
+            Have questions or feedback? We would love to hear from you.
           </p>
           
             href="mailto:support@notable.ai"
