@@ -13,31 +13,54 @@ export interface LLMResponse {
 
 export async function queryGemini(prompt: string): Promise<LLMResponse> {
   const startTime = Date.now()
-  
+
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-    
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      tools: [
+        {
+          googleSearch: {},
+        } as any,
+      ],
+    })
+
     const result = await model.generateContent(prompt)
     const response = await result.response
     const text = response.text()
-    
+
     const latencyMs = Date.now() - startTime
-    
+
     return {
       provider: 'gemini',
       model: 'gemini-2.0-flash',
       response: text,
-      tokens: 0, // Gemini doesn't easily expose token count
+      tokens: 0,
       latencyMs,
     }
   } catch (error: any) {
-    return {
-      provider: 'gemini',
-      model: 'gemini-2.0-flash',
-      response: '',
-      tokens: 0,
-      latencyMs: Date.now() - startTime,
-      error: error.message,
+    // Fallback without search if grounding fails
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+      const result = await model.generateContent(prompt)
+      const response = await result.response
+      const text = response.text()
+
+      return {
+        provider: 'gemini',
+        model: 'gemini-2.0-flash',
+        response: text,
+        tokens: 0,
+        latencyMs: Date.now() - startTime,
+      }
+    } catch (fallbackError: any) {
+      return {
+        provider: 'gemini',
+        model: 'gemini-2.0-flash',
+        response: '',
+        tokens: 0,
+        latencyMs: Date.now() - startTime,
+        error: fallbackError.message,
+      }
     }
   }
 }
