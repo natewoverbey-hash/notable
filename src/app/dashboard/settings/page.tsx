@@ -17,13 +17,21 @@ export default async function SettingsPage() {
     .eq('clerk_user_id', userId)
     .single()
 
-  const planName = user?.subscription_plan === 'beta_annual' ? 'Beta (Annual)' : 
-                   user?.subscription_plan === 'beta' ? 'Beta (Monthly)' : 'Free'
+  let planName = 'Free'
+  if (user?.subscription_plan === 'beta_annual') {
+    planName = 'Beta (Annual)'
+  } else if (user?.subscription_plan === 'beta') {
+    planName = 'Beta (Monthly)'
+  }
   
-  const statusColor = user?.subscription_status === 'active' ? 'text-green-600 bg-green-100' :
-                      user?.subscription_status === 'past_due' ? 'text-yellow-600 bg-yellow-100' :
-                      user?.subscription_status === 'canceled' ? 'text-red-600 bg-red-100' :
-                      'text-gray-600 bg-gray-100';
+  let statusColor = 'text-gray-600 bg-gray-100'
+  if (user?.subscription_status === 'active') {
+    statusColor = 'text-green-600 bg-green-100'
+  } else if (user?.subscription_status === 'past_due') {
+    statusColor = 'text-yellow-600 bg-yellow-100'
+  } else if (user?.subscription_status === 'canceled') {
+    statusColor = 'text-red-600 bg-red-100'
+  }
 
   return (
     <div>
@@ -75,10 +83,7 @@ export default async function SettingsPage() {
             )}
             {user?.subscription_status !== 'active' && (
               <div className="pt-4">
-                
-                  href="/pricing"
-                  className="btn-primary inline-flex items-center"
-                >
+                <a href="/pricing" className="btn-primary inline-flex items-center">
                   Upgrade to Beta
                 </a>
               </div>
