@@ -115,9 +115,9 @@ export default async function SettingsPage() {
           <p className="text-gray-600 mb-4">
             Have questions or feedback? We would love to hear from you.
           </p>
-          <a href="mailto:support@notable.ai" className="inline-flex items-center gap-2 text-notable-600 hover:text-notable-700">
+          <a href="mailto:support@withnotable.ai" className="inline-flex items-center gap-2 text-notable-600 hover:text-notable-700">
             <Mail className="h-4 w-4" />
-            support@notable.ai
+            support@withnotable.ai
             <ExternalLink className="h-4 w-4" />
           </a>
         </div>
