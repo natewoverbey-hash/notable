@@ -1,8 +1,10 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, TrendingUp, TrendingDown, Minus, AlertCircle, Users, Search, Target } from 'lucide-react'
+import { ArrowRight, TrendingUp, TrendingDown, Minus, AlertCircle, Users, Search, Target, Lightbulb } from 'lucide-react'
 import { supabaseAdmin } from '@/lib/supabase'
+import { analyzeScans, generateRecommendations } from '@/lib/recommendations'
+import Recommendations from '@/components/recommendations'
 
 export default async function DashboardPage() {
   const { userId } = await auth()
@@ -55,7 +57,7 @@ export default async function DashboardPage() {
           .select('*')
           .in('agent_id', agentIds)
           .order('scanned_at', { ascending: false })
-          .limit(100)
+          .limit(200)
 
         recentScans = scanData || []
       }
@@ -68,6 +70,11 @@ export default async function DashboardPage() {
 
   // Get per-provider scores from recent scans
   const providerScores = calculateProviderScores(recentScans)
+
+  // Generate recommendations
+  const agentName = agents[0]?.name || 'Agent'
+  const analysis = analyzeScans(recentScans, agentName)
+  const recommendations = generateRecommendations(analysis)
 
   return (
     <div>
@@ -120,7 +127,7 @@ export default async function DashboardPage() {
             <Search className="h-6 w-6 text-green-600" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-gray-900">{recentScans.length > 0 ? '40' : '0'}</p>
+            <p className="text-2xl font-bold text-gray-900">{recentScans.length}</p>
             <p className="text-sm text-gray-600">Prompts Scanned</p>
           </div>
         </div>
@@ -134,6 +141,17 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Recommendations Section */}
+      {recentScans.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Lightbulb className="h-5 w-5 text-yellow-500" />
+            <h2 className="text-lg font-semibold text-gray-900">Recommendations</h2>
+          </div>
+          <Recommendations recommendations={recommendations} />
+        </div>
+      )}
 
       {/* Agents List */}
       <div className="card mb-8">
