@@ -168,92 +168,182 @@ function extractCompetitors(response: string, excludeAgent: string): Array<{ nam
   const competitors: Array<{ name: string; rank: number }> = []
   const lowerExclude = excludeAgent.toLowerCase()
   
-  // Words/phrases that are NOT competitor names
+  // Words/phrases that are NOT competitor names - expanded list
   const falsePositives = [
+    // Generic terms
     'online platforms', 'google reviews', 'local recommendations', 'open houses',
     'brokerage websites', 'local publications', 'local real estate', 'professional organizations',
     'social media', 'word of mouth', 'local community', 'other notable', 'other agents',
     'real estate agencies', 'online reviews', 'local forums', 'community boards',
+    'note:', 'disclaimer', 'important', 'contact', 'recommended', 'steps to find',
+    'ways to find', 'methods', 'tips', 'suggestions', 'neighborhood knowledge',
+    'local listings', 'community involvement', 'interview potential', 'local real estate',
+    // Websites/platforms
     'zillow', 'realtor.com', 'redfin', 'yelp', 'facebook', 'linkedin', 'google',
     'charleston trident association', 'national association', 'mls data',
-    'note:', 'disclaimer', 'important', 'contact', 'recommended', 'steps to find',
-    'ways to find', 'methods', 'tips', 'suggestions',
+    // Neighborhoods and locations
     'old village', 'old mount pleasant', 'mount pleasant', 'charleston', 'daniel island',
-    'sullivans island', 'isle of palms', 'james island', 'johns island', 'west ashley',
+    'sullivans island', "sullivan's island", 'isle of palms', 'james island', 'johns island', 
+    'west ashley', 'north charleston', 'park west', 'dunes west', 'rivertowne',
+    'shem creek', 'i\'on', 'ion', 'belle hall', 'snee farm', 'seaside farms',
+    'adgers wharf', 'broad st', 'broad street', 'bay st', 'bay street',
+    'fulton hall', 'queensborough', 'coleman blvd', 'johnnie dodds',
+    'long point', 'highway 17', 'hwy 17', 'king street', 'meeting street',
+    'granary square', 'central park',
+    // Generic real estate terms
     'networking events', 'open house', 'local agents', 'top agents', 'best agents',
     'real estate', 'luxury homes', 'waterfront', 'historic homes', 'local experts',
     'client testimonials', 'search results', 'available data', 'current listings',
-    // Address patterns
-    'point rd', 'point road', 'street', 'avenue', 'blvd', 'boulevard', 'drive', 'lane', 'court', 'way', 'circle',
-    'long point', 'coleman blvd', 'johnnie dodds'
-  ]    
-  // Common real estate brokerages (to extract but mark as brokerage, not agent)
+    'professional associations', 'referrals'
+  ]
+  
+  // Common real estate brokerages - these should be INCLUDED in competitors when part of a team name
   const knownBrokerages = [
     'keller williams', 'coldwell banker', 'carolina one', 're/max', 'remax',
     'century 21', 'berkshire hathaway', 'sotheby', 'compass', 'exp realty',
-    'the cassina group', 'dunes properties', 'engel & völkers', 'engel and volkers'
+    'the cassina group', 'cassina group', 'dunes properties', 'engel & völkers', 
+    'engel and volkers', 'william means', 'handsome properties', 'agentowned',
+    'carolina elite', 'charleston premier', 'the boulevard company'
+  ]
+
+  // Patterns that indicate this is NOT a person's name
+  const notPersonPatterns = [
+    /\b(team|group|realty|real estate|properties|homes|inc|llc|company|association|organization|platform|website|review|office|agency)\b/i,
+    /\b(rd|road|st|street|ave|avenue|blvd|boulevard|dr|drive|ln|lane|ct|court|way|cir|circle|pl|place|hwy|highway)\b/i,
+    /\b(north|south|east|west|upper|lower|old|new|greater|downtown|uptown|midtown)\s+(charleston|village|mount|mt|pleasant)/i,
+    /^\d+\s/,  // Starts with number (address)
+    /\s#\d+/,  // Contains unit number
+    /\s\d{5}/,  // Contains zip code
+    /\.com|\.net|\.org/i,  // URLs
+    /^(the|a|an)\s/i,  // Starts with article (likely not a person)
   ]
   
   let rank = 1
+  const seen = new Set<string>()
   
-  // Pattern 1: Bold names like **First Last** (most reliable for Perplexity)
-  const boldPattern = /\*\*([A-Z][a-z]+(?:\s[A-Z][a-z']+)+)\*\*/g
+  // Pattern 1: Bold names like **First Last** or **First Last of Brokerage**
+  const boldPattern = /\*\*([^*]+)\*\*/g
   let match
   
   while ((match = boldPattern.exec(response)) !== null) {
-    const name = match[1].trim()
+    const fullMatch = match[1].trim()
+    
+    // Extract just the name if it includes "of Brokerage" or similar
+    let name = fullMatch
+    const ofMatch = fullMatch.match(/^([A-Z][a-z]+(?:\s[A-Z][a-z']+)+?)(?:\s+(?:of|at|with|from|,|\())/i)
+    if (ofMatch) {
+      name = ofMatch[1].trim()
+    }
+    
+    // Clean up the name
+    name = name.replace(/\s*\([^)]*\)\s*/g, '').trim()  // Remove parentheticals
+    name = name.replace(/\s*,.*$/, '').trim()  // Remove everything after comma
+    
     const lowerName = name.toLowerCase()
     
     // Skip if it's our agent
     if (lowerName.includes(lowerExclude) || lowerExclude.includes(lowerName)) continue
     
     // Skip false positives
-    if (falsePositives.some(fp => lowerName.includes(fp) || fp.includes(lowerName))) continue
+    if (falsePositives.some(fp => lowerName.includes(fp) || lowerName === fp)) continue
     
-    // Skip if it's just a brokerage name (no person name)
+    // Skip if matches "not a person" patterns
+    if (notPersonPatterns.some(pattern => pattern.test(name))) continue
+    
+    // Skip standalone brokerage names (but allow "Name at Brokerage")
     if (knownBrokerages.some(b => lowerName === b)) continue
     
-    // Skip if contains certain words that indicate it's not a person
-    if (/\b(team|group|realty|real estate|properties|homes|inc|llc|company|association|organization|platform|website|review)\b/i.test(name)) continue
-    
-    // Must look like a person's name (2-3 words, no numbers)
-    const words = name.split(' ')
+    // Must look like a person's name: 2-4 capitalized words
+    const words = name.split(/\s+/)
     if (words.length < 2 || words.length > 4) continue
-    if (/\d/.test(name)) continue
-
-    // Skip if looks like an address (contains road-related words)
-    if (/\b(rd|road|st|street|ave|avenue|blvd|dr|drive|ln|lane|ct|court|way|cir|circle)\b/i.test(name)) continue
     
-    // Check if already added
-    if (!competitors.find(c => c.name.toLowerCase() === lowerName)) {
+    // Each word should start with capital letter and be reasonable length
+    const looksLikeName = words.every(word => {
+      return /^[A-Z][a-z']+$/.test(word) && word.length >= 2 && word.length <= 15
+    })
+    if (!looksLikeName) continue
+    
+    // Skip if contains numbers
+    if (/\d/.test(name)) continue
+    
+    // Add if not already seen
+    const normalizedName = name.toLowerCase()
+    if (!seen.has(normalizedName)) {
+      seen.add(normalizedName)
       competitors.push({ name, rank })
       rank++
     }
   }
   
-  // Pattern 2: "Name of/at/with Brokerage" pattern
-  const agentBrokeragePattern = /([A-Z][a-z]+\s[A-Z][a-z']+(?:\s[A-Z][a-z']+)?)\s*(?:of|at|with|,)\s*(?:The\s)?([A-Z][a-z]+(?:\s[A-Z][a-z]+)*(?:\s(?:Real Estate|Realty|Properties|Group|Team))?)/g
+  // Pattern 2: Names in brackets [Name](url) - common in web search results
+  const bracketPattern = /\[([A-Z][a-z]+(?:\s[A-Z][a-z']+)+)\]\s*\(/g
   
-  while ((match = agentBrokeragePattern.exec(response)) !== null) {
+  while ((match = bracketPattern.exec(response)) !== null) {
     const name = match[1].trim()
     const lowerName = name.toLowerCase()
     
-    // Same validations
     if (lowerName.includes(lowerExclude) || lowerExclude.includes(lowerName)) continue
-    if (falsePositives.some(fp => lowerName.includes(fp))) continue
-    if (/\b(team|group|realty|real estate|properties)\b/i.test(name)) continue
+    if (falsePositives.some(fp => lowerName.includes(fp) || lowerName === fp)) continue
+    if (notPersonPatterns.some(pattern => pattern.test(name))) continue
     
-    const words = name.split(' ')
+    const words = name.split(/\s+/)
     if (words.length < 2 || words.length > 4) continue
     if (/\d/.test(name)) continue
     
-    if (!competitors.find(c => c.name.toLowerCase() === lowerName)) {
+    const normalizedName = name.toLowerCase()
+    if (!seen.has(normalizedName)) {
+      seen.add(normalizedName)
       competitors.push({ name, rank })
       rank++
     }
   }
   
-  return competitors.slice(0, 10)
+  // Pattern 3: Numbered list items with names: "1. First Last" or "1. **First Last**"
+  const numberedPattern = /\d+\.\s+\*?\*?([A-Z][a-z]+\s[A-Z][a-z']+(?:\s[A-Z][a-z']+)?)\*?\*?/g
+  
+  while ((match = numberedPattern.exec(response)) !== null) {
+    const name = match[1].trim()
+    const lowerName = name.toLowerCase()
+    
+    if (lowerName.includes(lowerExclude) || lowerExclude.includes(lowerName)) continue
+    if (falsePositives.some(fp => lowerName.includes(fp) || lowerName === fp)) continue
+    if (notPersonPatterns.some(pattern => pattern.test(name))) continue
+    
+    const words = name.split(/\s+/)
+    if (words.length < 2 || words.length > 4) continue
+    if (/\d/.test(name)) continue
+    
+    const normalizedName = name.toLowerCase()
+    if (!seen.has(normalizedName)) {
+      seen.add(normalizedName)
+      competitors.push({ name, rank })
+      rank++
+    }
+  }
+  
+  // Pattern 4: "Agent: First Last" or "Name: First Last" patterns
+  const labeledPattern = /(?:agent|realtor|broker|name):\s*([A-Z][a-z]+\s[A-Z][a-z']+(?:\s[A-Z][a-z']+)?)/gi
+  
+  while ((match = labeledPattern.exec(response)) !== null) {
+    const name = match[1].trim()
+    const lowerName = name.toLowerCase()
+    
+    if (lowerName.includes(lowerExclude) || lowerExclude.includes(lowerName)) continue
+    if (falsePositives.some(fp => lowerName.includes(fp) || lowerName === fp)) continue
+    if (notPersonPatterns.some(pattern => pattern.test(name))) continue
+    
+    const words = name.split(/\s+/)
+    if (words.length < 2 || words.length > 4) continue
+    
+    const normalizedName = name.toLowerCase()
+    if (!seen.has(normalizedName)) {
+      seen.add(normalizedName)
+      competitors.push({ name, rank })
+      rank++
+    }
+  }
+  
+  return competitors.slice(0, 15)
 }
 /**
  * Fill in variables in a prompt template
