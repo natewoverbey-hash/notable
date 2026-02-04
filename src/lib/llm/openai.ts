@@ -17,28 +17,24 @@ export async function queryOpenAI(prompt: string): Promise<LLMResponse> {
   const startTime = Date.now()
 
   try {
-    // Use the Responses API with web search tool
-    const response = await openai.responses.create({
+    // Use the Responses API with web_search_preview tool
+    const response = await (openai as any).responses.create({
       model: 'gpt-4o',
-      tools: [{ type: 'web_search_preview' }],
+      tools: [{ 
+        type: 'web_search_preview',
+        search_context_size: 'medium',
+        user_location: {
+          type: 'approximate',
+          country: 'US',
+        }
+      }],
       input: prompt,
     })
 
     const latencyMs = Date.now() - startTime
 
-    // Extract text from the response output
-    let responseText = ''
-    if (response.output) {
-      for (const item of response.output) {
-        if (item.type === 'message' && item.content) {
-          for (const content of item.content) {
-            if (content.type === 'output_text') {
-              responseText += content.text
-            }
-          }
-        }
-      }
-    }
+    // The Responses API returns output_text directly
+    const responseText = response.output_text || ''
 
     return {
       provider: 'chatgpt',
@@ -48,6 +44,8 @@ export async function queryOpenAI(prompt: string): Promise<LLMResponse> {
       latencyMs,
     }
   } catch (error: any) {
+    console.error('OpenAI Responses API error:', error.message)
+    
     // Fallback to regular chat completions if Responses API fails
     try {
       const completion = await openai.chat.completions.create({
