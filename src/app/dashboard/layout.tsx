@@ -7,15 +7,17 @@ import {
   FileText, 
   Settings,
   TrendingUp,
-  Plus
+  Plus,
+  Link2
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { name: 'My Agents', href: '/dashboard/agents', icon: Users },
   { name: 'Scans', href: '/dashboard/scans', icon: Search },
-  { name: 'Reports', href: '/dashboard/reports', icon: FileText },
   { name: 'Competitors', href: '/dashboard/competitors', icon: TrendingUp },
+  { name: 'Citations', href: '/dashboard/citations', icon: Link2 },
+  { name: 'Reports', href: '/dashboard/reports', icon: FileText },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
 
