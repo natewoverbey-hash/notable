@@ -132,7 +132,7 @@ export async function POST(request: Request) {
       luxury_threshold: formatLuxuryThreshold(agent.luxury_threshold || 1000000),
     }
 
-    const providers = ['chatgpt', 'claude', 'gemini', 'perplexity'] as const
+    const providers = ['chatgpt', 'gemini', 'perplexity'] as const
 
     let completed = 0
     const results = []
