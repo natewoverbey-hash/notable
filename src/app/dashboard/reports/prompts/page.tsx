@@ -106,9 +106,9 @@ export default async function PromptPerformancePage({
 
         if (latestBatch) {
           const { data: scans } = await supabaseAdmin
-            .from('scans')
-            .select('prompt_id, llm_provider, mentioned, mention_rank')
-            .eq('batch_id', latestBatch.id)
+          .from('scans')
+          .select('prompt_id, llm_provider, mentioned, mention_rank, prompt_rendered')
+          .eq('batch_id', latestBatch.id)
 
           const promptMap = new Map<number, PromptPerformance>()
 
@@ -123,7 +123,7 @@ export default async function PromptPerformancePage({
           promptsData.forEach(prompt => {
             promptMap.set(prompt.id, {
               promptId: prompt.id,
-              promptTemplate: prompt.template,
+              promptTemplate: '', // Will be filled from actual scan
               category: prompt.category,
               perplexity: null,
               chatgpt: null,
@@ -136,6 +136,10 @@ export default async function PromptPerformancePage({
           scans?.forEach(scan => {
             const perf = promptMap.get(scan.prompt_id)
             if (perf) {
+              // Use the rendered prompt from the scan
+              if (!perf.promptTemplate && scan.prompt_rendered) {
+                perf.promptTemplate = scan.prompt_rendered
+              }
               const provider = scan.llm_provider as 'perplexity' | 'chatgpt' | 'gemini'
               if (provider === 'perplexity' || provider === 'chatgpt' || provider === 'gemini') {
                 perf[provider] = {
@@ -258,9 +262,9 @@ export default async function PromptPerformancePage({
               <tbody>
                 {filteredPrompts.map((prompt) => (
                   <tr key={prompt.promptId} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4">
-                      <p className="text-sm text-gray-900 max-w-md truncate" title={prompt.promptTemplate}>
-                        {prompt.promptTemplate.length > 60 ? prompt.promptTemplate.substring(0, 60) + '...' : prompt.promptTemplate}
+                    <td className="py-3 px-4 max-w-lg">
+                      <p className="text-sm text-gray-900" title={prompt.promptTemplate}>
+                        {prompt.promptTemplate}
                       </p>
                     </td>
                     <td className="py-3 px-4">
