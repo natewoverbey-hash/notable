@@ -93,7 +93,6 @@ export default async function DashboardPage() {
   const providerChartData = [
     { provider: 'Perplexity', score: providerScores.perplexity, color: '#3b82f6' },
     { provider: 'ChatGPT', score: providerScores.chatgpt, color: '#10b981' },
-    { provider: 'Claude', score: providerScores.claude, color: '#f97316' },
     { provider: 'Gemini', score: providerScores.gemini, color: '#eab308' },
   ]
 
@@ -144,12 +143,6 @@ export default async function DashboardPage() {
           score={providerScores.chatgpt}
           change={0}
           trend={providerScores.chatgpt > 0 ? "up" : "neutral"}
-        />
-        <ScoreCard 
-          title="Claude"
-          score={providerScores.claude}
-          change={0}
-          trend={providerScores.claude > 0 ? "up" : "neutral"}
         />
         <ScoreCard 
           title="Gemini"
@@ -292,7 +285,7 @@ export default async function DashboardPage() {
 }
 
 function calculateProviderScores(scans: any[]) {
-  const providers = ['perplexity', 'chatgpt', 'claude', 'gemini']
+  const providers = ['perplexity', 'chatgpt', 'gemini']
   const scores: Record<string, number> = {}
 
   for (const provider of providers) {
