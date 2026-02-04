@@ -17,7 +17,7 @@ const navigation = [
   { name: 'Scans', href: '/dashboard/scans', icon: Search },
   { name: 'Competitors', href: '/dashboard/competitors', icon: TrendingUp },
   { name: 'Citations', href: '/dashboard/citations', icon: Link2 },
-  { name: 'Reports', href: '/dashboard/reports', icon: FileText },
+  { name: 'Prompt Performance', href: '/dashboard/reports/prompts', icon: FileText },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
 
