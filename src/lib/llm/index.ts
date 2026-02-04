@@ -187,7 +187,8 @@ function extractCompetitors(response: string, excludeAgent: string): Array<{ nam
     'local networking', 'local market expertise', 'investment property knowledge',
     'strong communication skills', 'network of local professionals',
     'important considerations', 'research each agent', 'interview multiple agents',
-    'what to look for', 'where to find', 'examples of what',
+    'what to look for', 'where to find', 'examples of what', 'here are some',
+    'sales data', 'market knowledge', 'marketing plan', 'good luck',
     // Websites/platforms
     'zillow', 'realtor.com', 'redfin', 'yelp', 'facebook', 'linkedin', 'google',
     'charleston trident association', 'national association', 'mls data',
@@ -204,10 +205,10 @@ function extractCompetitors(response: string, excludeAgent: string): Array<{ nam
     'networking events', 'open house', 'local agents', 'top agents', 'best agents',
     'real estate', 'luxury homes', 'waterfront', 'historic homes', 'local experts',
     'client testimonials', 'search results', 'available data', 'current listings',
-    'professional associations', 'referrals'
+    'professional associations', 'referrals', 'experience', 'disclaimer'
   ]
   
-  // Common real estate brokerages - these should be INCLUDED in competitors when part of a team name
+  // Common real estate brokerages
   const knownBrokerages = [
     'keller williams', 'coldwell banker', 'carolina one', 're/max', 'remax',
     'century 21', 'berkshire hathaway', 'sotheby', 'compass', 'exp realty',
@@ -231,50 +232,52 @@ function extractCompetitors(response: string, excludeAgent: string): Array<{ nam
   let rank = 1
   const seen = new Set<string>()
   
-  // Pattern 1: Bold names like **First Last** or **First Last of Brokerage**
-  const boldPattern = /\*\*([^*]+)\*\*/g
-  let match
-  
-  while ((match = boldPattern.exec(response)) !== null) {
-    const fullMatch = match[1].trim()
+  /**
+   * Helper function to validate and add a competitor name
+   */
+  function tryAddCompetitor(rawName: string): boolean {
+    // Clean up the name - remove colons, parentheticals, etc.
+    let name = rawName.trim()
+    name = name.replace(/:$/, '').trim()  // Remove trailing colon
+    name = name.replace(/\s*\([^)]*\)\s*/g, '').trim()  // Remove parentheticals
+    name = name.replace(/\s*,.*$/, '').trim()  // Remove everything after comma
+    name = name.replace(/\s*[-–—].*$/, '').trim()  // Remove everything after dash
     
     // Extract just the name if it includes "of Brokerage" or similar
-    let name = fullMatch
-    const ofMatch = fullMatch.match(/^([A-Z][a-z]+(?:\s[A-Z][a-z']+)+?)(?:\s+(?:of|at|with|from|,|\())/i)
+    const ofMatch = name.match(/^([A-Z][a-z]+(?:\s[A-Z][a-z']+)+?)(?:\s+(?:of|at|with|from))/i)
     if (ofMatch) {
       name = ofMatch[1].trim()
     }
     
-    // Clean up the name
-    name = name.replace(/\s*\([^)]*\)\s*/g, '').trim()  // Remove parentheticals
-    name = name.replace(/\s*,.*$/, '').trim()  // Remove everything after comma
-    
     const lowerName = name.toLowerCase()
     
+    // Skip if empty or too short
+    if (name.length < 4) return false
+    
     // Skip if it's our agent
-    if (lowerName.includes(lowerExclude) || lowerExclude.includes(lowerName)) continue
+    if (lowerName.includes(lowerExclude) || lowerExclude.includes(lowerName)) return false
     
     // Skip false positives
-    if (falsePositives.some(fp => lowerName.includes(fp) || lowerName === fp)) continue
+    if (falsePositives.some(fp => lowerName.includes(fp) || lowerName === fp)) return false
     
     // Skip if matches "not a person" patterns
-    if (notPersonPatterns.some(pattern => pattern.test(name))) continue
+    if (notPersonPatterns.some(pattern => pattern.test(name))) return false
     
-    // Skip standalone brokerage names (but allow "Name at Brokerage")
-    if (knownBrokerages.some(b => lowerName === b)) continue
+    // Skip standalone brokerage names
+    if (knownBrokerages.some(b => lowerName === b)) return false
     
-    // Must look like a person's name: 2-4 capitalized words
+    // Must look like a person's name: 2-4 words
     const words = name.split(/\s+/)
-    if (words.length < 2 || words.length > 4) continue
+    if (words.length < 2 || words.length > 4) return false
     
     // Each word should start with capital letter and be reasonable length
     const looksLikeName = words.every(word => {
       return /^[A-Z][a-z']+$/.test(word) && word.length >= 2 && word.length <= 15
     })
-    if (!looksLikeName) continue
+    if (!looksLikeName) return false
     
     // Skip if contains numbers
-    if (/\d/.test(name)) continue
+    if (/\d/.test(name)) return false
     
     // Add if not already seen
     const normalizedName = name.toLowerCase()
@@ -282,75 +285,54 @@ function extractCompetitors(response: string, excludeAgent: string): Array<{ nam
       seen.add(normalizedName)
       competitors.push({ name, rank })
       rank++
+      return true
     }
+    return false
   }
   
-  // Pattern 2: Names in brackets [Name](url) - common in web search results
+  let match
+  
+  // Pattern 1: Bold names like **First Last** or **First Last:** (Gemini format)
+  const boldPattern = /\*\*([^*]+)\*\*/g
+  
+  while ((match = boldPattern.exec(response)) !== null) {
+    tryAddCompetitor(match[1])
+  }
+  
+  // Pattern 2: Bullet points with names: "* Name:" or "- Name:" or "• Name"
+  const bulletPattern = /^[\s]*[*•\-]\s+([A-Z][a-z]+(?:\s[A-Z][a-z']+)+):?/gm
+  
+  while ((match = bulletPattern.exec(response)) !== null) {
+    tryAddCompetitor(match[1])
+  }
+  
+  // Pattern 3: Names in brackets [Name](url) - common in web search results
   const bracketPattern = /\[([A-Z][a-z]+(?:\s[A-Z][a-z']+)+)\]\s*\(/g
   
   while ((match = bracketPattern.exec(response)) !== null) {
-    const name = match[1].trim()
-    const lowerName = name.toLowerCase()
-    
-    if (lowerName.includes(lowerExclude) || lowerExclude.includes(lowerName)) continue
-    if (falsePositives.some(fp => lowerName.includes(fp) || lowerName === fp)) continue
-    if (notPersonPatterns.some(pattern => pattern.test(name))) continue
-    
-    const words = name.split(/\s+/)
-    if (words.length < 2 || words.length > 4) continue
-    if (/\d/.test(name)) continue
-    
-    const normalizedName = name.toLowerCase()
-    if (!seen.has(normalizedName)) {
-      seen.add(normalizedName)
-      competitors.push({ name, rank })
-      rank++
-    }
+    tryAddCompetitor(match[1])
   }
   
-  // Pattern 3: Numbered list items with names: "1. First Last" or "1. **First Last**"
-  const numberedPattern = /\d+\.\s+\*?\*?([A-Z][a-z]+\s[A-Z][a-z']+(?:\s[A-Z][a-z']+)?)\*?\*?/g
+  // Pattern 4: Numbered list items with names: "1. First Last" or "1. **First Last**"
+  const numberedPattern = /\d+\.\s+\*?\*?([A-Z][a-z]+(?:\s[A-Z][a-z']+)+)\*?\*?/g
   
   while ((match = numberedPattern.exec(response)) !== null) {
-    const name = match[1].trim()
-    const lowerName = name.toLowerCase()
-    
-    if (lowerName.includes(lowerExclude) || lowerExclude.includes(lowerName)) continue
-    if (falsePositives.some(fp => lowerName.includes(fp) || lowerName === fp)) continue
-    if (notPersonPatterns.some(pattern => pattern.test(name))) continue
-    
-    const words = name.split(/\s+/)
-    if (words.length < 2 || words.length > 4) continue
-    if (/\d/.test(name)) continue
-    
-    const normalizedName = name.toLowerCase()
-    if (!seen.has(normalizedName)) {
-      seen.add(normalizedName)
-      competitors.push({ name, rank })
-      rank++
-    }
+    tryAddCompetitor(match[1])
   }
   
-  // Pattern 4: "Agent: First Last" or "Name: First Last" patterns
-  const labeledPattern = /(?:agent|realtor|broker|name):\s*([A-Z][a-z]+\s[A-Z][a-z']+(?:\s[A-Z][a-z']+)?)/gi
+  // Pattern 5: "Agent: First Last" or "Name: First Last" patterns
+  const labeledPattern = /(?:agent|realtor|broker|name):\s*([A-Z][a-z]+(?:\s[A-Z][a-z']+)+)/gi
   
   while ((match = labeledPattern.exec(response)) !== null) {
-    const name = match[1].trim()
-    const lowerName = name.toLowerCase()
-    
-    if (lowerName.includes(lowerExclude) || lowerExclude.includes(lowerName)) continue
-    if (falsePositives.some(fp => lowerName.includes(fp) || lowerName === fp)) continue
-    if (notPersonPatterns.some(pattern => pattern.test(name))) continue
-    
-    const words = name.split(/\s+/)
-    if (words.length < 2 || words.length > 4) continue
-    
-    const normalizedName = name.toLowerCase()
-    if (!seen.has(normalizedName)) {
-      seen.add(normalizedName)
-      competitors.push({ name, rank })
-      rank++
-    }
+    tryAddCompetitor(match[1])
+  }
+  
+  // Pattern 6: Names followed by brokerage in parentheses or after dash
+  // e.g., "Kara Lyles (Handsome Properties)" or "Kara Lyles - Handsome Properties"
+  const nameWithBrokeragePattern = /([A-Z][a-z]+\s[A-Z][a-z']+(?:\s[A-Z][a-z']+)?)\s*(?:\(|[-–—])\s*(?:The\s)?(?:Cassina|William Means|Handsome|Coldwell|Carolina One|Dunes|Keller|Sotheby)/gi
+  
+  while ((match = nameWithBrokeragePattern.exec(response)) !== null) {
+    tryAddCompetitor(match[1])
   }
   
   return competitors.slice(0, 15)
