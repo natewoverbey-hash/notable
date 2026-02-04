@@ -11,24 +11,67 @@ export interface LLMResponse {
   error?: string
 }
 
+// Helper function to delay execution
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+// Retry with exponential backoff
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError: Error | null = null
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn()
+    } catch (error: any) {
+      lastError = error
+      
+      // Check if it's a rate limit error (429)
+      if (error.message?.includes('429') || error.message?.includes('Resource exhausted')) {
+        const waitTime = baseDelay * Math.pow(2, attempt) + Math.random() * 1000
+        console.log(`Gemini rate limited, waiting ${Math.round(waitTime)}ms before retry ${attempt + 1}/${maxRetries}`)
+        await delay(waitTime)
+      } else {
+        // Not a rate limit error, throw immediately
+        throw error
+      }
+    }
+  }
+  
+  throw lastError
+}
+
 export async function queryGemini(prompt: string): Promise<LLMResponse> {
   const startTime = Date.now()
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    // Try with Google Search grounding first
+    const response = await retryWithBackoff(async () => {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
-    // Use generateContent with Google Search grounding
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      tools: [
-        {
-          googleSearch: {},
-        } as any,
-      ],
-    } as any)
+      // Attempt grounded search using the tools parameter in generateContent
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        tools: [
+          {
+            // @ts-ignore - Google Search grounding tool
+            googleSearchRetrieval: {
+              dynamicRetrievalConfig: {
+                mode: 'MODE_DYNAMIC',
+                dynamicThreshold: 0.3,
+              },
+            },
+          },
+        ],
+      } as any)
 
-    const response = await result.response
-    const text = response.text()
+      return result
+    })
+
+    const responseData = await response.response
+    const text = responseData.text()
 
     const latencyMs = Date.now() - startTime
 
@@ -40,12 +83,18 @@ export async function queryGemini(prompt: string): Promise<LLMResponse> {
       latencyMs,
     }
   } catch (error: any) {
-    // Fallback without search if grounding fails
+    console.error('Gemini grounded search failed:', error.message)
+
+    // Fallback: Try without grounding
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-      const result = await model.generateContent(prompt)
-      const response = await result.response
-      const text = response.text()
+      const fallbackResponse = await retryWithBackoff(async () => {
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+        const result = await model.generateContent(prompt)
+        return result
+      })
+
+      const responseData = await fallbackResponse.response
+      const text = responseData.text()
 
       return {
         provider: 'gemini',
