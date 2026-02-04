@@ -160,6 +160,7 @@ export async function POST(request: Request) {
             mention_context: mention.context,
             sentiment: mention.sentiment,
             competitors_mentioned: mention.competitorsMentioned,
+            sources_cited: mention.sourcesCited,
             latency_ms: response.latencyMs,
             error_message: response.error,
           })
