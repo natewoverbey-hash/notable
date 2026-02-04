@@ -118,7 +118,7 @@ export default async function PromptPerformancePage({
             category: string
           }>
 
-          categories = [...new Set(promptsData.map(p => p.category))]
+          categories = Array.from(new Set(promptsData.map(p => p.category)))
 
           promptsData.forEach(prompt => {
             promptMap.set(prompt.id, {
