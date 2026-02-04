@@ -20,6 +20,7 @@ export interface ParsedMention {
   context: string | null
   sentiment: 'positive' | 'neutral' | 'negative' | null
   competitorsMentioned: Array<{ name: string; rank: number }>
+  sourcesCited: Array<{ source: string; url?: string; count: number }>
 }
 
 /**
@@ -93,6 +94,9 @@ export function parseAgentMention(
   // Extract competitors from the response
   const competitors = extractCompetitors(response, agentName)
   
+  // Extract sources from the response
+  const sources = extractSources(response)
+  
   if (!mentioned) {
     return {
       mentioned: false,
@@ -100,6 +104,7 @@ export function parseAgentMention(
       context: null,
       sentiment: null,
       competitorsMentioned: competitors,
+      sourcesCited: sources,
     }
   }
   
@@ -158,6 +163,7 @@ export function parseAgentMention(
     context,
     sentiment,
     competitorsMentioned: competitors,
+    sourcesCited: sources,
   }
 }
 
@@ -344,6 +350,158 @@ function extractCompetitors(response: string, excludeAgent: string): Array<{ nam
   }
   
   return competitors.slice(0, 15)
+}
+/**
+ * Extract cited sources from LLM response
+ */
+function extractSources(response: string): Array<{ source: string; url?: string; count: number }> {
+  const sourceMap = new Map<string, { url?: string; count: number }>()
+  
+  // Known source domains to look for
+  const knownSources: Record<string, string> = {
+    'homes.com': 'Homes.com',
+    'zillow.com': 'Zillow',
+    'zillow': 'Zillow',
+    'realtor.com': 'Realtor.com',
+    'redfin.com': 'Redfin',
+    'redfin': 'Redfin',
+    'yelp.com': 'Yelp',
+    'yelp': 'Yelp',
+    'google.com': 'Google',
+    'google': 'Google',
+    'facebook.com': 'Facebook',
+    'linkedin.com': 'LinkedIn',
+    'trulia.com': 'Trulia',
+    'realtrends.com': 'RealTrends',
+    'fastexpert.com': 'FastExpert',
+    'fastexpert': 'FastExpert',
+    'homelight.com': 'HomeLight',
+    'homelight': 'HomeLight',
+    'compass.com': 'Compass',
+    'coldwellbanker.com': 'Coldwell Banker',
+    'kw.com': 'Keller Williams',
+    'kellerwilliams': 'Keller Williams',
+    'sothebysrealty.com': "Sotheby's",
+    'christiesrealestate.com': "Christie's",
+    'berkshirehathaway': 'Berkshire Hathaway',
+    'century21.com': 'Century 21',
+    'exp realty': 'eXp Realty',
+    'exprealty': 'eXp Realty',
+    'cassina': 'The Cassina Group',
+    'dunesproperties': 'Dunes Properties',
+    'carolinaone': 'Carolina One',
+    'williammeans': 'William Means',
+    'charlestonrealestate': 'Charleston Real Estate',
+    'agent pronto': 'Agent Pronto',
+    'agentpronto': 'Agent Pronto',
+    'effectiveagents': 'EffectiveAgents',
+    'ratemyagent': 'RateMyAgent',
+  }
+  
+  // Pattern 1: Parenthetical citations like (Homes.com) or (Source Name)
+  const parenPattern = /\(([^)]+(?:\.com|\.org|\.net)?)\)/gi
+  let match
+  
+  while ((match = parenPattern.exec(response)) !== null) {
+    const citation = match[1].trim().toLowerCase()
+    
+    // Check if it matches a known source
+    for (const [key, displayName] of Object.entries(knownSources)) {
+      if (citation.includes(key)) {
+        const existing = sourceMap.get(displayName)
+        if (existing) {
+          existing.count++
+        } else {
+          sourceMap.set(displayName, { count: 1 })
+        }
+        break
+      }
+    }
+  }
+  
+  // Pattern 2: Bracketed citations with numbers like [1], [2] followed by source info
+  // This captures Perplexity-style citations
+  const bracketRefPattern = /\[(\d+)\]/g
+  const citationCount = (response.match(bracketRefPattern) || []).length
+  
+  // Pattern 3: URLs in the response
+  const urlPattern = /https?:\/\/(?:www\.)?([a-zA-Z0-9-]+(?:\.[a-zA-Z]{2,})+)[^\s)"]*/gi
+  
+  while ((match = urlPattern.exec(response)) !== null) {
+    const fullUrl = match[0]
+    const domain = match[1].toLowerCase()
+    
+    // Extract the main domain name
+    const domainParts = domain.split('.')
+    const mainDomain = domainParts.length > 1 ? domainParts[domainParts.length - 2] : domain
+    
+    // Check if it matches a known source
+    let foundSource = false
+    for (const [key, displayName] of Object.entries(knownSources)) {
+      if (domain.includes(key) || mainDomain === key.replace('.com', '')) {
+        const existing = sourceMap.get(displayName)
+        if (existing) {
+          existing.count++
+          if (!existing.url) existing.url = fullUrl
+        } else {
+          sourceMap.set(displayName, { url: fullUrl, count: 1 })
+        }
+        foundSource = true
+        break
+      }
+    }
+    
+    // If not a known source but looks like a real estate site, add it
+    if (!foundSource && /realty|realtor|homes|property|estate/i.test(domain)) {
+      const displayName = mainDomain.charAt(0).toUpperCase() + mainDomain.slice(1)
+      const existing = sourceMap.get(displayName)
+      if (existing) {
+        existing.count++
+      } else {
+        sourceMap.set(displayName, { url: fullUrl, count: 1 })
+      }
+    }
+  }
+  
+  // Pattern 4: Plain text mentions of sources
+  const textPatterns = [
+    { pattern: /\bZillow\b/gi, source: 'Zillow' },
+    { pattern: /\bRealtor\.com\b/gi, source: 'Realtor.com' },
+    { pattern: /\bRedfin\b/gi, source: 'Redfin' },
+    { pattern: /\bHomes\.com\b/gi, source: 'Homes.com' },
+    { pattern: /\bYelp\b/gi, source: 'Yelp' },
+    { pattern: /\bGoogle\s*(?:Reviews?|Business|Maps)?\b/gi, source: 'Google' },
+    { pattern: /\bFastExpert\b/gi, source: 'FastExpert' },
+    { pattern: /\bHomeLight\b/gi, source: 'HomeLight' },
+    { pattern: /\bRealTrends\b/gi, source: 'RealTrends' },
+    { pattern: /\bMLS\b/g, source: 'MLS' },
+    { pattern: /\bCharleston\s*(?:Trident\s*)?(?:Association|MLS)\b/gi, source: 'Charleston MLS' },
+  ]
+  
+  for (const { pattern, source } of textPatterns) {
+    const matches = response.match(pattern)
+    if (matches && matches.length > 0) {
+      const existing = sourceMap.get(source)
+      if (existing) {
+        // Don't double count if we already found via URL
+        if (matches.length > existing.count) {
+          existing.count = matches.length
+        }
+      } else {
+        sourceMap.set(source, { count: matches.length })
+      }
+    }
+  }
+  
+  // Convert map to sorted array
+  return Array.from(sourceMap.entries())
+    .map(([source, data]) => ({
+      source,
+      url: data.url,
+      count: data.count,
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10)
 }
 /**
  * Fill in variables in a prompt template
