@@ -183,7 +183,11 @@ function extractCompetitors(response: string, excludeAgent: string): Array<{ nam
     'real estate agencies', 'online reviews', 'local forums', 'community boards',
     'note:', 'disclaimer', 'important', 'contact', 'recommended', 'steps to find',
     'ways to find', 'methods', 'tips', 'suggestions', 'neighborhood knowledge',
-    'local listings', 'community involvement', 'interview potential', 'local real estate',
+    'local listings', 'community involvement', 'interview potential', 'local real estate', 
+    'local networking', 'local market expertise', 'investment property knowledge',
+    'strong communication skills', 'network of local professionals',
+    'important considerations', 'research each agent', 'interview multiple agents',
+    'what to look for', 'where to find', 'examples of what',
     // Websites/platforms
     'zillow', 'realtor.com', 'redfin', 'yelp', 'facebook', 'linkedin', 'google',
     'charleston trident association', 'national association', 'mls data',
