@@ -1,8 +1,11 @@
 import OpenAI from 'openai'
 
 const grok = new OpenAI({
-  apiKey: process.env.XAI_API_KEY,
+  apiKey: process.env.XAI_API_KEY!,
   baseURL: 'https://api.x.ai/v1',
+  defaultHeaders: {
+    'Authorization': `Bearer ${process.env.XAI_API_KEY}`,
+  },
 })
 
 export interface LLMResponse {
