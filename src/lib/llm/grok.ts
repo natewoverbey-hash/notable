@@ -18,7 +18,7 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
         'Authorization': `Bearer ${process.env.XAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'grok-2-1212',
+        model: 'grok-3',
         messages: [
           {
             role: 'system',
@@ -36,7 +36,7 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
     const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.error?.message || `API error: ${response.status}`)
+      throw new Error(JSON.stringify(data))
     }
 
     const latencyMs = Date.now() - startTime
@@ -44,7 +44,7 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
 
     return {
       provider: 'grok',
-      model: 'grok-2-1212',
+      model: 'grok-3',
       response: content,
       tokens: data.usage?.total_tokens || 0,
       latencyMs,
@@ -52,7 +52,7 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
   } catch (error: any) {
     return {
       provider: 'grok',
-      model: 'grok-2-1212',
+      model: 'grok-3',
       response: '',
       tokens: 0,
       latencyMs: Date.now() - startTime,
