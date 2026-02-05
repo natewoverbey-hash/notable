@@ -33,7 +33,7 @@ export async function queryLLM(
 ): Promise<LLMResponse> {
   const startTime = Date.now()
   
-  try {
+try {
     switch (provider) {
       case 'chatgpt':
         return queryOpenAI(prompt)
@@ -49,9 +49,9 @@ export async function queryLLM(
           response,
           tokens: 0,
           latencyMs: Date.now() - startTime,
+        }
       case 'grok':
         return queryGrok(prompt)
-        }
       default:
         throw new Error(`Unknown LLM provider: ${provider}`)
     }
