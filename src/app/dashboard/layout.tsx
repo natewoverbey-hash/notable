@@ -8,7 +8,8 @@ import {
   Settings,
   TrendingUp,
   Plus,
-  Link2
+  Link2,
+  Lightbulb
 } from 'lucide-react'
 
 const navigation = [
