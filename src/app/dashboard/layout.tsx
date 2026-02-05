@@ -15,6 +15,7 @@ const navigation = [
   { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { name: 'My Agents', href: '/dashboard/agents', icon: Users },
   { name: 'Scans', href: '/dashboard/scans', icon: Search },
+  { name: 'Recommendations', href: '/dashboard/recommendations', icon: Lightbulb },
   { name: 'Competitors', href: '/dashboard/competitors', icon: TrendingUp },
   { name: 'Citations', href: '/dashboard/citations', icon: Link2 },
   { name: 'Prompt Performance', href: '/dashboard/reports/prompts', icon: FileText },
