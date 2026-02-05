@@ -5,7 +5,7 @@ import { Download, Users, Search, TrendingUp, Database, BarChart3 } from 'lucide
 import Link from 'next/link'
 
 // Add your Clerk user ID here
-const ADMIN_USER_IDS = ['user_user_39GX6ddhwNFDKgReYooPZ8KB8NO']
+const ADMIN_USER_IDS = ['user_39GX6ddhwNFDKgReYooPZ8KB8NO']
 
 export default async function AdminDashboard() {
   const { userId } = await auth()
