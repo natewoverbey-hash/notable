@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
-const ADMIN_USER_IDS = ['user_REPLACE_WITH_YOUR_CLERK_USER_ID']
+const ADMIN_USER_IDS = ['user_user_39GX6ddhwNFDKgReYooPZ8KB8NO']
 
 export async function GET() {
   const { userId } = await auth()
