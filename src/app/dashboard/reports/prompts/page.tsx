@@ -13,6 +13,7 @@ interface PromptPerformance {
   perplexity: { mentioned: boolean; rank: number | null } | null
   chatgpt: { mentioned: boolean; rank: number | null } | null
   gemini: { mentioned: boolean; rank: number | null } | null
+  grok: { mentioned: boolean; rank: number | null } | null
   overallScore: number
   mentionCount: number
 }
@@ -128,6 +129,7 @@ export default async function PromptPerformancePage({
               perplexity: null,
               chatgpt: null,
               gemini: null,
+              grok: null,
               overallScore: 0,
               mentionCount: 0,
             })
@@ -141,7 +143,7 @@ export default async function PromptPerformancePage({
                 perf.promptTemplate = scan.prompt_rendered
               }
               const provider = scan.llm_provider as 'perplexity' | 'chatgpt' | 'gemini'
-              if (provider === 'perplexity' || provider === 'chatgpt' || provider === 'gemini') {
+              if (provider === 'perplexity' || provider === 'chatgpt' || provider === 'gemini' || provider === 'grok') {
                 perf[provider] = {
                   mentioned: scan.mentioned,
                   rank: scan.mention_rank,
@@ -151,7 +153,7 @@ export default async function PromptPerformancePage({
           })
 
           promptMap.forEach(perf => {
-            const results = [perf.perplexity, perf.chatgpt, perf.gemini].filter(p => p !== null)
+            const results = [perf.perplexity, perf.chatgpt, perf.gemini, perf.grok].filter(p => p !== null)
             if (results.length > 0) {
               perf.mentionCount = results.filter(p => p?.mentioned).length
               perf.overallScore = Math.round((perf.mentionCount / results.length) * 100)
@@ -256,6 +258,7 @@ export default async function PromptPerformancePage({
                   <th className="text-center py-3 px-4 font-medium text-gray-600">Perplexity</th>
                   <th className="text-center py-3 px-4 font-medium text-gray-600">ChatGPT</th>
                   <th className="text-center py-3 px-4 font-medium text-gray-600">Gemini</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-600">Grok</th>
                   <th className="text-center py-3 px-4 font-medium text-gray-600">Score</th>
                 </tr>
               </thead>
@@ -273,6 +276,7 @@ export default async function PromptPerformancePage({
                     <td className="py-3 px-4 text-center"><ProviderBadge result={prompt.perplexity} /></td>
                     <td className="py-3 px-4 text-center"><ProviderBadge result={prompt.chatgpt} /></td>
                     <td className="py-3 px-4 text-center"><ProviderBadge result={prompt.gemini} /></td>
+                    <td className="py-3 px-4 text-center"><ProviderBadge result={prompt.grok} /></td>
                     <td className="py-3 px-4 text-center">
                       <span className={`inline-flex items-center justify-center w-12 py-1 rounded-full text-sm font-medium ${prompt.overallScore === 100 ? 'bg-green-100 text-green-700' : prompt.overallScore > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
                         {prompt.overallScore}%
