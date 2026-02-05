@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, CheckCircle2, Clock, Sparkles, ChevronDown, ChevronRight, ExternalLink, Zap, BookOpen, Target } from 'lucide-react'
+import { ArrowLeft, Zap, BookOpen, Target, Lightbulb } from 'lucide-react'
 import { supabaseAdmin } from '@/lib/supabase'
 import { analyzeScans, generateRecommendations, Recommendation } from '@/lib/recommendations'
 import RecommendationCard from '@/components/recommendation-card'
@@ -21,6 +21,7 @@ export default async function RecommendationsPage() {
 
   let recommendations: Recommendation[] = []
   let agentName = ''
+  let hasScans = false
 
   if (user) {
     const { data: workspace } = await supabaseAdmin
@@ -30,23 +31,27 @@ export default async function RecommendationsPage() {
       .single()
 
     if (workspace) {
+      // Get all agents for this workspace
       const { data: agents } = await supabaseAdmin
         .from('agents')
         .select('id, name')
         .eq('workspace_id', workspace.id)
-        .limit(1)
+        .order('created_at', { ascending: false })
 
       if (agents && agents.length > 0) {
         agentName = agents[0].name
+        const agentIds = agents.map(a => a.id)
         
+        // Get scans for all agents - use scanned_at like the dashboard does
         const { data: scans } = await supabaseAdmin
           .from('scans')
           .select('*')
-          .eq('agent_id', agents[0].id)
-          .order('created_at', { ascending: false })
+          .in('agent_id', agentIds)
+          .order('scanned_at', { ascending: false })
           .limit(200)
 
         if (scans && scans.length > 0) {
+          hasScans = true
           const analysis = analyzeScans(scans, agentName)
           recommendations = generateRecommendations(analysis)
         }
@@ -69,10 +74,15 @@ export default async function RecommendationsPage() {
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Your Action Center</h1>
-        <p className="text-gray-600 mt-1">
-          Personalized recommendations to improve your AI visibility
-        </p>
+        <div className="flex items-center gap-3">
+          <Lightbulb className="h-8 w-8 text-notable-600" />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Your Action Center</h1>
+            <p className="text-gray-600">
+              Personalized recommendations to improve your AI visibility
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Progress Overview */}
@@ -188,12 +198,18 @@ export default async function RecommendationsPage() {
         </div>
       )}
 
+      {/* Empty State */}
       {recommendations.length === 0 && (
         <div className="card text-center py-12">
           <Target className="h-12 w-12 text-green-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Looking good!</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            {hasScans ? 'Looking good!' : 'No recommendations yet'}
+          </h3>
           <p className="text-gray-600">
-            Run a scan to get personalized recommendations for improving your AI visibility.
+            {hasScans 
+              ? 'Your AI visibility is strong. Keep monitoring for changes.'
+              : 'Run a scan to get personalized recommendations for improving your AI visibility.'
+            }
           </p>
           <Link href="/dashboard/agents" className="btn-primary mt-4 inline-block">
             Go to Agents
