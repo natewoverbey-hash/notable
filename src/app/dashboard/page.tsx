@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, TrendingUp, TrendingDown, Minus, AlertCircle, Users, Search, Target, Play, Eye } from 'lucide-react'
+import { ArrowRight, TrendingUp, TrendingDown, Minus, AlertCircle, Users, Search, Target, Play, Eye, Lightbulb, Zap } from 'lucide-react'
 import { supabaseAdmin } from '@/lib/supabase'
 import { analyzeScans, generateRecommendations } from '@/lib/recommendations'
 import Recommendations from '@/components/recommendations'
@@ -249,12 +249,81 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Recommendations Section */}
-      {recentScans.length > 0 && recommendations.length > 0 && (
-        <div className="mb-8">
-          <Recommendations recommendations={recommendations} />
+      {/* Recommendations Summary Widget */}
+{recentScans.length > 0 && recommendations.length > 0 && (
+  <div className="card mb-8">
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-2">
+        <Lightbulb className="h-5 w-5 text-notable-600" />
+        <h2 className="text-lg font-semibold text-gray-900">Action Items</h2>
+      </div>
+      <Link href="/dashboard/recommendations" className="text-notable-600 hover:text-notable-700 text-sm font-medium">
+        View All →
+      </Link>
+    </div>
+
+    {/* Progress Bar */}
+    <div className="mb-4">
+      <div className="flex items-center justify-between text-sm mb-1">
+        <span className="text-gray-600">Overall Progress</span>
+        <span className="font-medium text-gray-900">0% Complete</span>
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-2.5">
+        <div className="bg-notable-600 h-2.5 rounded-full" style={{ width: '0%' }}></div>
+      </div>
+    </div>
+
+    {/* Priority Summary */}
+    <div className="flex items-center gap-4 mb-4 text-sm">
+      <div className="flex items-center gap-1.5">
+        <div className="w-2.5 h-2.5 bg-red-500 rounded-full"></div>
+        <span className="text-gray-700">
+          <strong>{recommendations.filter(r => r.priority === 'high').length}</strong> High Priority
+        </span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full"></div>
+        <span className="text-gray-700">
+          <strong>{recommendations.filter(r => r.priority === 'medium').length}</strong> Medium
+        </span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <div className="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
+        <span className="text-gray-700">
+          <strong>{recommendations.filter(r => r.priority === 'low').length}</strong> Low
+        </span>
+      </div>
+    </div>
+
+    {/* Quick Win Callout */}
+    {recommendations.find(r => r.actionability === 'platform_solvable') && (
+      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 mb-4 border border-green-200">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4 text-green-600" />
+            <span className="text-sm font-medium text-green-800">
+              Quick Win: "{recommendations.find(r => r.actionability === 'platform_solvable')?.title}"
+            </span>
+          </div>
+          <Link 
+            href="/dashboard/recommendations" 
+            className="text-xs font-medium text-green-700 hover:text-green-800"
+          >
+            Generate Now →
+          </Link>
         </div>
-      )}
+      </div>
+    )}
+
+    {/* CTA Button */}
+    <Link 
+      href="/dashboard/recommendations"
+      className="block w-full text-center py-3 bg-notable-50 hover:bg-notable-100 text-notable-700 font-medium rounded-lg transition-colors"
+    >
+      Take Action on Your Visibility →
+    </Link>
+  </div>
+)}
 
       {/* Recent Scans */}
       <div className="card">
