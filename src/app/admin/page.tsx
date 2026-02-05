@@ -155,12 +155,13 @@ export default async function AdminDashboard() {
             </h2>
             <div className="space-y-4">
               {Object.entries(providerStats).map(([provider, stats]) => {
-                const rate = Math.round((stats.mentioned / stats.total) * 100)
+                const s = stats as { total: number; mentioned: number }
+                const rate = Math.round((s.mentioned / s.total) * 100)
                 return (
                   <div key={provider}>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="font-medium capitalize">{provider}</span>
-                      <span className="text-gray-600">{rate}% ({stats.mentioned}/{stats.total})</span>
+                      <span className="text-gray-600">{rate}% ({s.mentioned}/{s.total})</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
