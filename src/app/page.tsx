@@ -35,7 +35,7 @@ export default function HomePage() {
             Are You Visible to <span className="text-notable-600">AI Assistants?</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            When buyers ask ChatGPT, Claude, or Perplexity for agent recommendations, 
+            When buyers ask ChatGPT, Gemini, Grok or Perplexity for agent recommendations, 
             are you being mentioned? Notable monitors your AI visibility and shows you 
             exactly how to improve it.
           </p>
