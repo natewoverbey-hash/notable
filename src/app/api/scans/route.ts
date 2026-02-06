@@ -171,8 +171,29 @@ export async function POST(request: Request) {
             if (scan) {
               results.push(scan)
             }
-          } catch (err) {
+          } catch (err: any) {
             console.error(`Error with ${provider}:`, err)
+            // Save the error to Supabase so we can see it
+            await supabaseAdmin
+              .from('scans')
+              .insert({
+                batch_id: batch.id,
+                agent_id: agentId,
+                prompt_id: prompt.id,
+                prompt_rendered: renderedPrompt,
+                llm_provider: provider,
+                llm_model: 'unknown',
+                response_raw: '',
+                response_tokens: 0,
+                mentioned: false,
+                mention_rank: null,
+                mention_context: null,
+                sentiment: null,
+                competitors_mentioned: [],
+                sources_cited: [],
+                latency_ms: 0,
+                error_message: err?.message || String(err),
+              })
           }
         })()
         
