@@ -11,6 +11,12 @@ export interface LLMResponse {
 export async function queryGrok(prompt: string): Promise<LLMResponse> {
   const startTime = Date.now()
   
+  // Debug: List all env vars that contain "GROK" or "XAI"
+  const allEnvKeys = Object.keys(process.env).filter(key => 
+    key.includes('GROK') || key.includes('XAI') || key.includes('grok') || key.includes('xai')
+  )
+  console.log('Available env vars matching GROK/XAI:', allEnvKeys)
+  
   const apiKey = process.env.GROK_API_KEY
   const keyExists = !!apiKey
   const keyLength = apiKey?.length || 0
