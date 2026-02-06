@@ -10,7 +10,7 @@ export interface LLMResponse {
 export async function queryGrok(prompt: string): Promise<LLMResponse> {
   const startTime = Date.now()
   
-  const apiKey = const apiKey = 'xai-baPIRbzI0OTPwKSVNvMS4VAAhgRwgozSxoWQkBJRiuoOVJDWPhBjfcQz6jShsAVskE2r7Ja0DNS9knKL'
+  const apiKey = 'xai-baPIRbzI0OTPwKSVNvMS4VAAhgRwgozSxoWQkBJRiuoOVJDWPhBjfcQz6jShsAVskE2r7Ja0DNS9knKL'
   
   if (!apiKey) {
     return {
