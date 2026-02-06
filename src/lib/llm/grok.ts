@@ -12,7 +12,6 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
   
   const apiKey = process.env.GROK_API_KEY
   
-  // Debug: Check if key exists
   if (!apiKey) {
     return {
       provider: 'grok',
@@ -20,7 +19,7 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
       response: '',
       tokens: 0,
       latencyMs: Date.now() - startTime,
-      error: '_API_KEY environment variable is not set',
+      error: 'GROK_API_KEY environment variable is not set',
     }
   }
 
