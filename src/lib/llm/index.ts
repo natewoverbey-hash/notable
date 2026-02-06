@@ -2,9 +2,8 @@ import { queryOpenAI } from './openai'
 import { queryAnthropic } from './anthropic'
 import { queryGemini } from './gemini'
 import { queryPerplexity } from './perplexity'
-import { queryGrok } from './grok'
 
-export type LLMProvider = 'chatgpt' | 'claude' | 'gemini' | 'perplexity' | 'grok'
+export type LLMProvider = 'chatgpt' | 'claude' | 'gemini' | 'perplexity' 
 
 export interface LLMResponse {
   provider: LLMProvider
@@ -50,8 +49,6 @@ try {
           tokens: 0,
           latencyMs: Date.now() - startTime,
         }
-      case 'grok':
-        return queryGrok(prompt)
       default:
         throw new Error(`Unknown LLM provider: ${provider}`)
     }
