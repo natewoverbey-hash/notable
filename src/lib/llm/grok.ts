@@ -15,7 +15,7 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
   if (!apiKey) {
     return {
       provider: 'grok',
-      model: 'grok-3',
+      model: 'grok-4-latest',
       response: '',
       tokens: 0,
       latencyMs: Date.now() - startTime,
@@ -31,7 +31,7 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'grok-3',
+        model: 'grok-4-latest',
         messages: [
           {
             role: 'system',
@@ -56,7 +56,7 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
 
     return {
       provider: 'grok',
-      model: 'grok-3',
+      model: 'grok-4-latest',
       response: content,
       tokens: data.usage?.total_tokens || 0,
       latencyMs: Date.now() - startTime,
@@ -64,7 +64,7 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
   } catch (error: any) {
     return {
       provider: 'grok',
-      model: 'grok-3',
+      model: 'grok-4-latest',
       response: '',
       tokens: 0,
       latencyMs: Date.now() - startTime,
