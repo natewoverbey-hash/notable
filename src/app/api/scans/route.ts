@@ -130,7 +130,7 @@ export async function POST(request: Request) {
       luxury_threshold: formatLuxuryThreshold(agent.luxury_threshold || 1000000),
     }
 
-    const providers: LLMProvider[] = ['chatgpt', 'gemini', 'perplexity', 'grok']
+    const providers: LLMProvider[] = ['chatgpt', 'gemini', 'perplexity']
     console.log('Providers to scan:', providers)
     const results: any[] = []
 
