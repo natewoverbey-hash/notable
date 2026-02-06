@@ -131,6 +131,7 @@ export async function POST(request: Request) {
     }
 
     const providers: LLMProvider[] = ['chatgpt', 'gemini', 'perplexity', 'grok']
+    console.log('Providers to scan:', providers)
     const results: any[] = []
 
     // Process ALL prompts and providers in parallel
@@ -142,7 +143,9 @@ export async function POST(request: Request) {
       for (const provider of providers) {
         const task = (async () => {
           try {
+            console.log(`Starting query for provider: ${provider}`)
             const response = await queryLLM(provider, renderedPrompt)
+            console.log(`Completed query for provider: ${provider}, error: ${response.error || 'none'}`)
             const mention = parseAgentMention(response.response, agent.name)
             
             const { data: scan } = await supabaseAdmin
