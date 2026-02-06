@@ -13,11 +13,11 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
   
   // Debug: List all env vars that contain "GROK" or "XAI"
   const allEnvKeys = Object.keys(process.env).filter(key => 
-    key.includes('GROK') || key.includes('XAI') || key.includes('grok') || key.includes('xai')
+    key.includes('GROK') || key.includes('XAI') || key.includes('grok') || key.includes('LLM')
   )
   console.log('Available env vars matching GROK/XAI:', allEnvKeys)
   
-  const apiKey = process.env.XAI_API_KEY
+  const apiKey = process.env.LLM_GROK
   const keyExists = !!apiKey
   const keyLength = apiKey?.length || 0
   const keyStart = apiKey?.substring(0, 4) || 'none'
@@ -29,7 +29,7 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
       response: '',
       tokens: 0,
       latencyMs: Date.now() - startTime,
-      error: `XAI_API_KEY not set. Exists: ${keyExists}, Length: ${keyLength}, Start: ${keyStart}`,
+      error: `LLM_GROK not set. Exists: ${keyExists}, Length: ${keyLength}, Start: ${keyStart}`,
     }
   }
 
