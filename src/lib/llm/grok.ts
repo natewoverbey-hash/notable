@@ -17,7 +17,7 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
   )
   console.log('Available env vars matching GROK/XAI:', allEnvKeys)
   
-  const apiKey = process.env.GROK_API_KEY
+  const apiKey = process.env.XAI_API_KEY
   const keyExists = !!apiKey
   const keyLength = apiKey?.length || 0
   const keyStart = apiKey?.substring(0, 4) || 'none'
@@ -29,7 +29,7 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
       response: '',
       tokens: 0,
       latencyMs: Date.now() - startTime,
-      error: `GROK_API_KEY not set. Exists: ${keyExists}, Length: ${keyLength}, Start: ${keyStart}`,
+      error: `XAI_API_KEY not set. Exists: ${keyExists}, Length: ${keyLength}, Start: ${keyStart}`,
     }
   }
 
