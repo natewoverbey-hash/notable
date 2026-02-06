@@ -29,7 +29,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-notable-50 text-notable-700 rounded-full text-sm font-medium mb-6">
             <Zap className="h-4 w-4" />
-            AI is changing how buyers find agents
+            AI is changing how buyers find real estate agents
           </div>
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
             Your Competitors Are Showing Up in AI Search.  <span className="text-notable-600">Are You?</span>
