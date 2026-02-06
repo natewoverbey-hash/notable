@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getUserSubscription, canRunScans } from '@/lib/subscription'
-import { queryAllLLMs, parseAgentMention, renderPrompt } from '@/lib/llm'
+import { queryLLM, parseAgentMention, renderPrompt, LLMProvider } from '@/lib/llm'
 import prompts from '@/lib/prompts/real-estate.json'
 
 interface Prompt {
@@ -60,7 +60,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check subscription
     const subscription = await getUserSubscription(userId)
     if (!canRunScans(subscription)) {
       return NextResponse.json(
@@ -69,7 +68,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Mark free scan as used for non-subscribers
     if (!subscription.isActive && !subscription.hasUsedFreeScan) {
       await supabaseAdmin
         .from('users')
@@ -132,53 +130,58 @@ export async function POST(request: Request) {
       luxury_threshold: formatLuxuryThreshold(agent.luxury_threshold || 1000000),
     }
 
-    const providers = ['chatgpt', 'gemini', 'perplexity', 'grok'] as const
+    const providers: LLMProvider[] = ['chatgpt', 'gemini', 'perplexity', 'grok']
+    const results: any[] = []
 
-    let completed = 0
-    const results = []
+    // Process ALL prompts and providers in parallel
+    const allTasks: Promise<void>[] = []
 
     for (const prompt of filteredPrompts) {
       const renderedPrompt = renderPrompt(prompt.template, variables)
-      const responses = await queryAllLLMs(renderedPrompt, [...providers])
       
-      for (const response of responses) {
-        const mention = parseAgentMention(response.response, agent.name)
+      for (const provider of providers) {
+        const task = (async () => {
+          try {
+            const response = await queryLLM(provider, renderedPrompt)
+            const mention = parseAgentMention(response.response, agent.name)
+            
+            const { data: scan } = await supabaseAdmin
+              .from('scans')
+              .insert({
+                batch_id: batch.id,
+                agent_id: agentId,
+                prompt_id: prompt.id,
+                prompt_rendered: renderedPrompt,
+                llm_provider: response.provider,
+                llm_model: response.model,
+                response_raw: response.response,
+                response_tokens: response.tokens,
+                mentioned: mention.mentioned,
+                mention_rank: mention.rank,
+                mention_context: mention.context,
+                sentiment: mention.sentiment,
+                competitors_mentioned: mention.competitorsMentioned,
+                sources_cited: mention.sourcesCited,
+                latency_ms: response.latencyMs,
+                error_message: response.error,
+              })
+              .select()
+              .single()
+
+            if (scan) {
+              results.push(scan)
+            }
+          } catch (err) {
+            console.error(`Error with ${provider}:`, err)
+          }
+        })()
         
-        const { data: scan, error: scanError } = await supabaseAdmin
-          .from('scans')
-          .insert({
-            batch_id: batch.id,
-            agent_id: agentId,
-            prompt_id: prompt.id,
-            prompt_rendered: renderedPrompt,
-            llm_provider: response.provider,
-            llm_model: response.model,
-            response_raw: response.response,
-            response_tokens: response.tokens,
-            mentioned: mention.mentioned,
-            mention_rank: mention.rank,
-            mention_context: mention.context,
-            sentiment: mention.sentiment,
-            competitors_mentioned: mention.competitorsMentioned,
-            sources_cited: mention.sourcesCited,
-            latency_ms: response.latencyMs,
-            error_message: response.error,
-          })
-          .select()
-          .single()
-
-        if (!scanError) {
-          results.push(scan)
-        }
+        allTasks.push(task)
       }
-
-      completed++
-      
-      await supabaseAdmin
-        .from('scan_batches')
-        .update({ prompts_completed: completed })
-        .eq('id', batch.id)
     }
+
+    // Wait for all tasks to complete
+    await Promise.all(allTasks)
 
     const totalScans = results.length
     const mentionedScans = results.filter(r => r.mentioned).length
@@ -191,6 +194,7 @@ export async function POST(request: Request) {
       .update({ 
         status: 'completed',
         completed_at: new Date().toISOString(),
+        prompts_completed: filteredPrompts.length,
       })
       .eq('id', batch.id)
 
