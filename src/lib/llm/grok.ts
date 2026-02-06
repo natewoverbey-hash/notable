@@ -10,7 +10,7 @@ export interface LLMResponse {
 export async function queryGrok(prompt: string): Promise<LLMResponse> {
   const startTime = Date.now()
   
-  const apiKey = process.env.XAI_API_KEY
+  const apiKey = process.env.GROK_API_KEY
   
   // Debug: Check if key exists
   if (!apiKey) {
@@ -20,7 +20,7 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
       response: '',
       tokens: 0,
       latencyMs: Date.now() - startTime,
-      error: 'XAI_API_KEY environment variable is not set',
+      error: '_API_KEY environment variable is not set',
     }
   }
 
