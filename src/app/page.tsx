@@ -32,12 +32,12 @@ export default function HomePage() {
             AI is changing how buyers find agents
           </div>
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            Are You Visible to <span className="text-notable-600">AI Assistants?</span>
+            Your Competitors Are Showing Up in AI Search.  <span className="text-notable-600">Are You?</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            When buyers ask ChatGPT, Gemini, Grok or Perplexity for agent recommendations, 
-            are you being mentioned? Notable monitors your AI visibility and shows you 
-            exactly how to improve it.
+            For real estate agents: When buyers ask ChatGPT or Perplexity "Who's the best agent in [neighborhood]?" 
+            they're getting instant recommendations. If you're not being mentioned, you're losing opportunities. 
+            Notable shows you where you rank against competitors and gives you the exact playbook to improve.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/sign-up" className="btn-primary text-lg px-8 py-3 inline-flex items-center gap-2">
