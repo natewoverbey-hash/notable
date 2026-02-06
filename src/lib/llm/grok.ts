@@ -9,20 +9,34 @@ export interface LLMResponse {
 
 export async function queryGrok(prompt: string): Promise<LLMResponse> {
   const startTime = Date.now()
+  
+  const apiKey = process.env.XAI_API_KEY
+  
+  // Debug: Check if key exists
+  if (!apiKey) {
+    return {
+      provider: 'grok',
+      model: 'grok-3',
+      response: '',
+      tokens: 0,
+      latencyMs: Date.now() - startTime,
+      error: 'XAI_API_KEY environment variable is not set',
+    }
+  }
 
   try {
     const response = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.XAI_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'grok-3',
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful assistant that provides accurate, specific information about real estate agents. When asked about agents in a specific area, provide specific names and brokerages when possible. Base your answers on factual information.',
+            content: 'You are a helpful assistant that provides accurate, specific information about real estate agents. When asked about agents in a specific area, provide specific names and brokerages when possible.',
           },
           {
             role: 'user',
@@ -36,10 +50,9 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
     const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(JSON.stringify(data))
+      throw new Error(`${response.status}: ${JSON.stringify(data)}`)
     }
 
-    const latencyMs = Date.now() - startTime
     const content = data.choices?.[0]?.message?.content || ''
 
     return {
@@ -47,7 +60,7 @@ export async function queryGrok(prompt: string): Promise<LLMResponse> {
       model: 'grok-3',
       response: content,
       tokens: data.usage?.total_tokens || 0,
-      latencyMs,
+      latencyMs: Date.now() - startTime,
     }
   } catch (error: any) {
     return {
