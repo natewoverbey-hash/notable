@@ -16,7 +16,8 @@ import {
   AlertCircle,
   TrendingUp,
   Star,
-  Users
+  Users,
+  UserCircle
 } from 'lucide-react'
 
 interface RecommendationCardProps {
@@ -47,6 +48,8 @@ export default function RecommendationCard({ recommendation: rec }: Recommendati
         return <Code className="h-5 w-5" />
       case 'competitive':
         return <Users className="h-5 w-5" />
+      case 'profiles':
+        return <UserCircle className="h-5 w-5" />
       default:
         return <AlertCircle className="h-5 w-5" />
     }
@@ -152,7 +155,7 @@ export default function RecommendationCard({ recommendation: rec }: Recommendati
           {/* Jargon Translation */}
           {rec.jargon_term && rec.plain_english && (
             <div className="bg-blue-50 rounded-lg p-3 mb-4 border border-blue-100">
-              <div className="text-xs font-medium text-blue-700 mb-1">What is "{rec.jargon_term}"?</div>
+              <div className="text-xs font-medium text-blue-700 mb-1">What is &ldquo;{rec.jargon_term}&rdquo;?</div>
               <p className="text-sm text-blue-800">{rec.plain_english}</p>
             </div>
           )}
@@ -179,8 +182,8 @@ export default function RecommendationCard({ recommendation: rec }: Recommendati
                   <div className="font-semibold text-gray-900">{rec.expected_weeks_chatgpt || '?'} wk</div>
                 </div>
                 <div className="bg-white rounded-lg p-2 border border-gray-200">
-                  <div className="text-xs text-gray-500">Claude</div>
-                  <div className="font-semibold text-gray-900">{rec.expected_weeks_claude || '?'} wk</div>
+                  <div className="text-xs text-gray-500">Gemini</div>
+                  <div className="font-semibold text-gray-900">{rec.expected_weeks_gemini || '?'} wk</div>
                 </div>
               </div>
             </div>
