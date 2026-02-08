@@ -136,10 +136,8 @@ function ScanRow({ scan, agentName }: { scan: Scan; agentName: string }) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   const sources = useMemo(() => {
-    const cited = extractSources(scan.sources_cited)
-    if (cited.length > 0) return cited
-    return extractUrlsFromResponse(scan.response_raw)
-  }, [scan.sources_cited, scan.response_raw])
+    return extractSources(scan.sources_cited)
+  }, [scan.sources_cited])
 
   const competitors = scan.competitors_mentioned || []
 
