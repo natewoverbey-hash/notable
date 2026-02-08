@@ -5,6 +5,7 @@ import { ArrowLeft, Zap, BookOpen, Target, Lightbulb } from 'lucide-react'
 import { supabaseAdmin } from '@/lib/supabase'
 import { analyzeScans, generateRecommendations, Recommendation } from '@/lib/recommendations'
 import RecommendationCard from '@/components/recommendation-card'
+import { getAgentPresence } from '@/lib/profile-audit'
 
 export default async function RecommendationsPage() {
   const { userId } = await auth()
@@ -53,7 +54,8 @@ export default async function RecommendationsPage() {
         if (scans && scans.length > 0) {
           hasScans = true
           const analysis = analyzeScans(scans, agentName)
-          recommendations = generateRecommendations(analysis)
+          const profilePresence = await getAgentPresence(userId)
+          recommendations = generateRecommendations(analysis, profilePresence)
         }
       }
     }
