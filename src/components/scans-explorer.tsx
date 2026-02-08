@@ -74,26 +74,34 @@ function getProvider(key: string) {
   return PROVIDERS[key] || { name: key, color: 'text-gray-700', bg: 'bg-gray-50', border: 'border-gray-200', icon: '⚪' }
 }
 
-// Extract domains from sources_cited
-function extractSources(sourcesCited: any[]): { domain: string; url: string }[] {
+// Extract sources from sources_cited
+// Format: [{url?, count?, source?}] — ChatGPT has URLs, Gemini often only has source names
+function extractSources(sourcesCited: any[]): { domain: string; url: string; sourceName: string; count: number }[] {
   if (!sourcesCited || !Array.isArray(sourcesCited)) return []
 
-  const sources: { domain: string; url: string }[] = []
+  const sources: { domain: string; url: string; sourceName: string; count: number }[] = []
 
   for (const source of sourcesCited) {
     try {
-      const url = typeof source === 'string' ? source : source?.url || source?.href || ''
-      if (!url) continue
+      const url = typeof source === 'string' ? source : source?.url || ''
+      const sourceName = source?.source || ''
+      const count = source?.count || 1
 
-      let domain = url
-      try {
-        domain = new URL(url).hostname.replace('www.', '')
-      } catch {
-        // If not a valid URL, use as-is
-        domain = url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]
+      let domain = ''
+      if (url) {
+        try {
+          domain = new URL(url).hostname.replace('www.', '')
+        } catch {
+          domain = url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]
+        }
+      } else if (sourceName) {
+        // No URL — use source name as the domain label (common with Gemini)
+        domain = sourceName
+      } else {
+        continue
       }
 
-      sources.push({ domain, url })
+      sources.push({ domain, url, sourceName, count })
     } catch {
       // skip bad entries
     }
@@ -234,17 +242,22 @@ function ScanRow({ scan, agentName }: { scan: Scan; agentName: string }) {
                   <div key={i} className="flex items-center gap-2 px-3 py-2">
                     <Globe className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
                     <span className="text-sm font-medium text-gray-700 flex-shrink-0">
-                      {source.domain}
+                      {source.sourceName || source.domain}
                     </span>
-                    <a
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-notable-600 hover:text-notable-700 truncate flex items-center gap-1"
-                    >
-                      {source.url}
-                      <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                    </a>
+                    {source.count > 1 && (
+                      <span className="text-xs text-gray-400">×{source.count}</span>
+                    )}
+                    {source.url && (
+                      <a
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-notable-600 hover:text-notable-700 truncate flex items-center gap-1 ml-auto"
+                      >
+                        {source.domain}
+                        <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                      </a>
+                    )}
                   </div>
                 ))}
               </div>
@@ -277,13 +290,6 @@ function ScanRow({ scan, agentName }: { scan: Scan; agentName: string }) {
             </div>
           )}
 
-          {/* Metadata */}
-          <div className="flex items-center gap-4 text-xs text-gray-400 pt-2 border-t border-gray-200">
-            <span>Model: {scan.llm_model}</span>
-            <span>Tokens: {scan.response_tokens}</span>
-            <span>Latency: {scan.latency_ms}ms</span>
-            {scan.sentiment && <span>Sentiment: {scan.sentiment}</span>}
-          </div>
         </div>
       )}
     </div>
@@ -311,20 +317,20 @@ function LLMSection({
 
   // Aggregate all sources across scans for this provider
   const allSources = useMemo(() => {
-    const domainCounts = new Map<string, { count: number; url: string }>()
+    const sourceMap = new Map<string, { count: number; url: string; sourceName: string }>()
     for (const scan of scans) {
       const sources = extractSources(scan.sources_cited)
-      const fallback = sources.length > 0 ? sources : extractUrlsFromResponse(scan.response_raw)
-      for (const s of fallback) {
-        const existing = domainCounts.get(s.domain)
+      for (const s of sources) {
+        const key = s.sourceName || s.domain
+        const existing = sourceMap.get(key)
         if (existing) {
-          existing.count++
+          existing.count += s.count
         } else {
-          domainCounts.set(s.domain, { count: 1, url: s.url })
+          sourceMap.set(key, { count: s.count, url: s.url, sourceName: s.sourceName || s.domain })
         }
       }
     }
-    return Array.from(domainCounts.entries())
+    return Array.from(sourceMap.entries())
       .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 10)
   }, [scans])
@@ -377,13 +383,13 @@ function LLMSection({
                 Top Sources {p.name} is Citing
               </h4>
               <div className="flex flex-wrap gap-2">
-                {allSources.map(([domain, { count }]) => (
+                {allSources.map(([key, { count, sourceName }]) => (
                   <span
-                    key={domain}
+                    key={key}
                     className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs bg-white border border-gray-200 rounded-full"
                   >
                     <Globe className="h-3 w-3 text-gray-400" />
-                    <span className="font-medium text-gray-700">{domain}</span>
+                    <span className="font-medium text-gray-700">{sourceName}</span>
                     <span className="text-gray-400">×{count}</span>
                   </span>
                 ))}
