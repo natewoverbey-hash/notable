@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { priceType } = body // 'monthly' or 'annual'
 
-    const priceId = priceType === 'annual' ? PRICES.BETA_ANNUAL : PRICES.BETA_MONTHLY
+    const priceId = priceType === 'annual' ? PRICES.PRO_ANNUAL : PRICES.PRO_MONTHLY
 
     // Get user email from Clerk or Supabase
     const { data: user } = await supabaseAdmin
