@@ -141,9 +141,9 @@ export default async function RecommendationsPage() {
                 <div className="text-xs text-gray-400 mt-1">Updates training data periodically</div>
               </div>
               <div className="bg-white rounded-lg p-3 border border-gray-200">
-                <div className="font-medium text-gray-900">Claude</div>
-                <div className="text-gray-500">4-8 weeks</div>
-                <div className="text-xs text-gray-400 mt-1">Uses training data + some search</div>
+                <div className="font-medium text-gray-900">Gemini</div>
+                <div className="text-gray-500">3-6 weeks</div>
+                <div className="text-xs text-gray-400 mt-1">Pulls from Google&apos;s index</div>
               </div>
             </div>
           </div>
