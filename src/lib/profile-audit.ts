@@ -395,7 +395,7 @@ export async function enrichFromCitations(
     'fastexpert.com': 'fastexpert',
   }
 
-  for (const [domain] of citationSources) {
+  for (const [domain] of Array.from(citationSources)) {
     for (const [pattern, platformKey] of Object.entries(platformMappings)) {
       if (domain.includes(pattern)) {
         // Only upsert if we don't already have a confirmed or user_reported entry
