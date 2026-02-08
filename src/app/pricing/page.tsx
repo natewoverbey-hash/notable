@@ -39,8 +39,8 @@ export default function PricingPage() {
     }
   }
 
-  const price = billing === 'monthly' ? 29 : 290
-  const perMonth = billing === 'monthly' ? 29 : Math.round(290 / 12)
+  const price = billing === 'monthly' ? 99 : 986
+  const perMonth = billing === 'monthly' ? 99 : Math.round(986 / 12)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -73,10 +73,10 @@ export default function PricingPage() {
       <div className="max-w-3xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Get Found by AI
+            One Plan. Everything You Need to Improve.
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            For less than one Zillow lead, optimize your presence across ALL AI platforms.
+            For less than one Zillow lead, get the complete AI visibility improvement engine.
           </p>
 
           {/* Billing Toggle */}
@@ -109,7 +109,7 @@ export default function PricingPage() {
         <div className="bg-white rounded-2xl shadow-lg border-2 border-notable-500 p-8 max-w-md mx-auto">
           <div className="text-center mb-6">
             <span className="inline-block bg-notable-100 text-notable-700 text-sm font-semibold px-3 py-1 rounded-full mb-4">
-              Beta Access
+              Notable Pro
             </span>
             <div className="flex items-baseline justify-center gap-2">
               <span className="text-5xl font-bold text-gray-900">${perMonth}</span>
@@ -125,19 +125,27 @@ export default function PricingPage() {
           <ul className="space-y-4 mb-8">
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-              <span className="text-gray-700">AI scans across ChatGPT, Claude, Gemini & Perplexity</span>
+              <span className="text-gray-700">AI scanning across ChatGPT, Gemini & Perplexity</span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-              <span className="text-gray-700">Visibility score tracking over time</span>
+              <span className="text-gray-700">Visibility Score with historical trend tracking</span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-              <span className="text-gray-700">Competitor intelligence & rankings</span>
+              <span className="text-gray-700">Competitor intelligence — see who AI recommends instead</span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-              <span className="text-gray-700">Customized scans based on your specialties</span>
+              <span className="text-gray-700">Personalized Action Plan with step-by-step playbook</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+              <span className="text-gray-700">Before & after tracking to prove what's working</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+              <span className="text-gray-700">Automated recurring scans</span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
@@ -162,8 +170,8 @@ export default function PricingPage() {
         <div className="mt-16 text-center">
           <p className="text-gray-600">
             Questions? Email us at{' '}
-            <a href="mailto:support@notable.ai" className="text-notable-600 hover:underline">
-              support@notable.ai
+            <a href="mailto:support@withnotable.ai" className="text-notable-600 hover:underline">
+              support@withnotable.ai
             </a>
           </p>
         </div>
