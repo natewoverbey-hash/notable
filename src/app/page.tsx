@@ -235,36 +235,44 @@ export default function HomePage() {
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Simple, Transparent Pricing
+            One Plan. Everything You Need to Improve.
           </h2>
           <p className="text-xl text-gray-600 mb-8">
-            For less than one Zillow lead, optimize your presence across ALL AI platforms.
+            For less than one Zillow lead, get the complete AI visibility improvement engine.
           </p>
           
           <div className="bg-white rounded-2xl shadow-lg border-2 border-notable-500 p-8 max-w-md mx-auto">
             <span className="inline-block bg-notable-100 text-notable-700 text-sm font-semibold px-3 py-1 rounded-full mb-4">
-              Beta Access
+              Notable Pro
             </span>
             <div className="flex items-baseline justify-center gap-2 mb-6">
-              <span className="text-5xl font-bold text-gray-900">$29</span>
+              <span className="text-5xl font-bold text-gray-900">$99</span>
               <span className="text-gray-500">/month</span>
             </div>
             <ul className="space-y-3 mb-8 text-left">
               <li className="flex items-center gap-3">
                 <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                <span className="text-gray-700">AI scans across 4 platforms</span>
+                <span className="text-gray-700">AI scanning across ChatGPT, Claude, Gemini & Perplexity</span>
               </li>
               <li className="flex items-center gap-3">
                 <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                <span className="text-gray-700">Visibility score tracking</span>
+                <span className="text-gray-700">Visibility Score with historical trend tracking</span>
               </li>
               <li className="flex items-center gap-3">
                 <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                <span className="text-gray-700">Competitor intelligence</span>
+                <span className="text-gray-700">Competitor intelligence — see who AI recommends instead</span>
               </li>
               <li className="flex items-center gap-3">
                 <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                <span className="text-gray-700">Actionable recommendations</span>
+                <span className="text-gray-700">Personalized Action Plan with step-by-step playbook</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
+                <span className="text-gray-700">Before & after tracking to prove what's working</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
+                <span className="text-gray-700">Automated recurring scans</span>
               </li>
               <li className="flex items-center gap-3">
                 <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
