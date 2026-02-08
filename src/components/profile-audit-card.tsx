@@ -1,185 +1,333 @@
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft, Shield, RefreshCw } from 'lucide-react'
-import { supabaseAdmin } from '@/lib/supabase'
-import { getAgentPresence, PLATFORMS } from '@/lib/profile-audit'
-import ProfileAuditCard from '@/components/profile-audit-card'
+'use client'
 
-export default async function ProfileAuditPage() {
-  const { userId } = await auth()
+import { useState } from 'react'
+import {
+  CheckCircle2,
+  XCircle,
+  HelpCircle,
+  ExternalLink,
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+} from 'lucide-react'
 
-  if (!userId) {
-    redirect('/sign-in')
-  }
+interface ProfileAuditCardProps {
+  platform: string
+  label: string
+  status: string       // 'confirmed' | 'not_found' | 'unknown'
+  source: string       // 'llm_audit' | 'citation' | 'user_reported' | 'none'
+  profileUrl: string | null
+  agentName: string
+  userId: string
+}
 
-  // Get agent info for display
-  const { data: user } = await supabaseAdmin
-    .from('users')
-    .select('id')
-    .eq('clerk_user_id', userId)
-    .single()
+// Platform-specific help text
+const PLATFORM_HELP: Record<string, { checkUrl: string; description: string }> = {
+  zillow: {
+    checkUrl: 'https://www.zillow.com/agent-finder/',
+    description: 'Search for your name on Zillow\'s agent finder to see if you have a profile.',
+  },
+  homes_com: {
+    checkUrl: 'https://www.homes.com/real-estate-agents/',
+    description: 'Search for your name on Homes.com to check for an existing profile.',
+  },
+  realtor_com: {
+    checkUrl: 'https://www.realtor.com/realestateagents/',
+    description: 'Search your name on Realtor.com to find your agent profile.',
+  },
+  bing_places: {
+    checkUrl: 'https://www.bingplaces.com/',
+    description: 'Sign into Bing Places for Business to check if you have a listing.',
+  },
+  google_business: {
+    checkUrl: 'https://business.google.com/',
+    description: 'Sign into Google Business Profile to check your listing.',
+  },
+  fastexpert: {
+    checkUrl: 'https://www.fastexpert.com/',
+    description: 'Search for your name on FastExpert to see if you have a profile.',
+  },
+}
 
-  let agentName = ''
-  let agentId = ''
+// What each platform impacts
+const PLATFORM_IMPACT: Record<string, string> = {
+  zillow: 'Cited in 40%+ of AI agent recommendations',
+  homes_com: 'Growing citation source across all AI platforms',
+  realtor_com: 'Major directory that AI uses for agent data',
+  bing_places: 'Critical for ChatGPT visibility — feeds directly into it',
+  google_business: 'Critical for Gemini visibility — Google\'s AI reads this first',
+  fastexpert: 'Emerging directory used by AI for agent discovery',
+}
 
-  if (user) {
-    const { data: workspace } = await supabaseAdmin
-      .from('workspaces')
-      .select('id')
-      .eq('owner_id', user.id)
-      .single()
+export default function ProfileAuditCard({
+  platform,
+  label,
+  status: initialStatus,
+  source: initialSource,
+  profileUrl: initialProfileUrl,
+  agentName,
+  userId,
+}: ProfileAuditCardProps) {
+  const [status, setStatus] = useState(initialStatus)
+  const [source, setSource] = useState(initialSource)
+  const [profileUrl, setProfileUrl] = useState(initialProfileUrl || '')
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [showUrlInput, setShowUrlInput] = useState(false)
+  const [saved, setSaved] = useState(false)
 
-    if (workspace) {
-      const { data: agents } = await supabaseAdmin
-        .from('agents')
-        .select('id, name')
-        .eq('workspace_id', workspace.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
+  const help = PLATFORM_HELP[platform]
+  const impact = PLATFORM_IMPACT[platform]
 
-      if (agents && agents.length > 0) {
-        agentName = agents[0].name
-        agentId = agents[0].id
-      }
+  const handleConfirm = async (newStatus: 'confirmed' | 'not_found') => {
+    // If they're saying "I have this" and we don't have a URL, show the input
+    if (newStatus === 'confirmed' && !profileUrl && status !== 'confirmed') {
+      setShowUrlInput(true)
+      setIsExpanded(true)
+      return
     }
-  }
 
-  // Get current audit data
-  const presence = await getAgentPresence(userId)
+    setIsSaving(true)
+    setSaved(false)
 
-  // Check if audit has been run
-  const hasAuditData = presence.length > 0
-  const lastChecked = presence[0]?.checkedAt
-    ? new Date(presence[0].checkedAt).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
+    try {
+      const res = await fetch('/api/profile-audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update',
+          agentName,
+          platform,
+          status: newStatus,
+          profileUrl: newStatus === 'confirmed' ? profileUrl : undefined,
+        }),
       })
-    : null
 
-  // Build display data — show all platforms even if not in audit
-  const displayPlatforms = PLATFORMS.map(p => {
-    const audit = presence.find(a => a.platform === p.key)
-    return {
-      key: p.key,
-      label: p.label,
-      status: audit?.status || 'unknown',
-      source: audit?.source || 'none',
-      profileUrl: audit?.profileUrl || null,
+      if (res.ok) {
+        setStatus(newStatus)
+        setSource('user_reported')
+        setShowUrlInput(false)
+        setSaved(true)
+        setTimeout(() => setSaved(false), 2000)
+      }
+    } catch (err) {
+      console.error('Failed to update profile status:', err)
+    } finally {
+      setIsSaving(false)
     }
-  })
+  }
 
-  const confirmed = displayPlatforms.filter(p => p.status === 'confirmed')
-  const notFound = displayPlatforms.filter(p => p.status === 'not_found')
-  const unknown = displayPlatforms.filter(p => p.status === 'unknown')
+  const handleSubmitUrl = async () => {
+    if (!profileUrl.trim()) return
+    await handleConfirm('confirmed')
+  }
+
+  const getStatusIcon = () => {
+    switch (status) {
+      case 'confirmed':
+        return <CheckCircle2 className="h-6 w-6 text-green-500" />
+      case 'not_found':
+        return <XCircle className="h-6 w-6 text-red-400" />
+      default:
+        return <HelpCircle className="h-6 w-6 text-gray-400" />
+    }
+  }
+
+  const getStatusText = () => {
+    if (source === 'user_reported') {
+      return status === 'confirmed' ? 'Confirmed by you' : 'Marked as missing'
+    }
+    switch (status) {
+      case 'confirmed':
+        return 'Found by scan'
+      case 'not_found':
+        return 'Not found by scan'
+      default:
+        return 'Couldn\'t determine'
+    }
+  }
+
+  const getStatusBg = () => {
+    switch (status) {
+      case 'confirmed':
+        return 'bg-green-50 border-green-200'
+      case 'not_found':
+        return 'bg-red-50 border-red-200'
+      default:
+        return 'bg-gray-50 border-gray-200'
+    }
+  }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <Link
-          href="/dashboard"
-          className="text-notable-600 hover:text-notable-700 text-sm font-medium flex items-center gap-1 mb-4"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
-        </Link>
-        <div className="flex items-center gap-3">
-          <Shield className="h-8 w-8 text-notable-600" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Profile Audit</h1>
-            <p className="text-gray-600">
-              Verify your online presence so we can give you accurate recommendations
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className={`border rounded-lg overflow-hidden ${getStatusBg()}`}>
+      {/* Main row */}
+      <div className="flex items-center gap-4 p-4">
+        {/* Status icon */}
+        <div className="flex-shrink-0">{getStatusIcon()}</div>
 
-      {/* Explainer */}
-      <div className="card mb-6 bg-notable-50 border border-notable-200">
-        <p className="text-sm text-notable-800">
-          We scanned the web to check which platforms have a profile for{' '}
-          <strong>{agentName || 'you'}</strong>. Review the results below and
-          correct anything that&apos;s wrong — this ensures your recommendations
-          are based on your <em>actual</em> gaps, not guesses.
-        </p>
-        {lastChecked && (
-          <p className="text-xs text-notable-600 mt-2 flex items-center gap-1">
-            <RefreshCw className="h-3 w-3" />
-            Last checked: {lastChecked}
-          </p>
-        )}
-      </div>
-
-      {/* Summary */}
-      {hasAuditData && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="card text-center py-4">
-            <div className="text-2xl font-bold text-green-600">{confirmed.length}</div>
-            <div className="text-sm text-gray-600">Found</div>
+        {/* Platform info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-gray-900">{label}</h3>
+            {saved && (
+              <span className="text-xs text-green-600 font-medium animate-pulse">
+                ✓ Saved
+              </span>
+            )}
           </div>
-          <div className="card text-center py-4">
-            <div className="text-2xl font-bold text-red-600">{notFound.length}</div>
-            <div className="text-sm text-gray-600">Not Found</div>
-          </div>
-          <div className="card text-center py-4">
-            <div className="text-2xl font-bold text-gray-400">{unknown.length}</div>
-            <div className="text-sm text-gray-600">Uncertain</div>
-          </div>
+          <p className="text-sm text-gray-500">{getStatusText()}</p>
         </div>
-      )}
 
-      {/* Platform Cards */}
-      {hasAuditData ? (
-        <div className="space-y-3 mb-8">
-          {displayPlatforms.map(platform => (
-            <ProfileAuditCard
-              key={platform.key}
-              platform={platform.key}
-              label={platform.label}
-              status={platform.status}
-              source={platform.source}
-              profileUrl={platform.profileUrl}
-              agentName={agentName}
-              userId={userId}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="card text-center py-12 mb-8">
-          <Shield className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            No audit data yet
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Run a scan first — the profile audit runs automatically alongside it.
-          </p>
-          <Link href="/dashboard/agents" className="btn-primary inline-block">
-            Go to Agents
-          </Link>
-        </div>
-      )}
-
-      {/* Continue to Recommendations */}
-      {hasAuditData && (
-        <div className="card bg-gray-50 border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-gray-900">Looking good?</h3>
-              <p className="text-sm text-gray-600">
-                Once everything is correct, your recommendations will be tailored
-                to your actual profile gaps.
-              </p>
-            </div>
-            <Link
-              href="/dashboard/recommendations"
-              className="btn-primary whitespace-nowrap"
+        {/* Action buttons */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {status !== 'confirmed' && (
+            <button
+              onClick={() => handleConfirm('confirmed')}
+              disabled={isSaving}
+              className="text-sm px-3 py-1.5 rounded-lg bg-green-100 text-green-700 
+                         hover:bg-green-200 font-medium transition-colors
+                         disabled:opacity-50"
             >
-              View Recommendations →
-            </Link>
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                'I have this'
+              )}
+            </button>
+          )}
+          {status !== 'not_found' && (
+            <button
+              onClick={() => handleConfirm('not_found')}
+              disabled={isSaving}
+              className="text-sm px-3 py-1.5 rounded-lg bg-red-100 text-red-700 
+                         hover:bg-red-200 font-medium transition-colors
+                         disabled:opacity-50"
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "I don't have this"
+              )}
+            </button>
+          )}
+          {/* Undo: if user-reported, show the opposite to let them change */}
+          {source === 'user_reported' && (
+            <button
+              onClick={() =>
+                handleConfirm(status === 'confirmed' ? 'not_found' : 'confirmed')
+              }
+              disabled={isSaving}
+              className="text-xs px-2 py-1 text-gray-500 hover:text-gray-700"
+            >
+              Change
+            </button>
+          )}
+
+          {/* Expand for details */}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-gray-400 hover:text-gray-600 p-1"
+          >
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* URL input (shown when user clicks "I have this" and no URL exists) */}
+      {showUrlInput && (
+        <div className="px-4 pb-3 border-t border-green-200 bg-green-50">
+          <div className="flex items-center gap-2 mt-3">
+            <input
+              type="url"
+              placeholder={`Paste your ${label} profile URL (optional)`}
+              value={profileUrl}
+              onChange={e => setProfileUrl(e.target.value)}
+              className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-lg 
+                         focus:outline-none focus:ring-2 focus:ring-notable-500 
+                         focus:border-notable-500"
+              onKeyDown={e => e.key === 'Enter' && handleSubmitUrl()}
+            />
+            <button
+              onClick={handleSubmitUrl}
+              disabled={isSaving}
+              className="btn-primary text-sm px-4 py-2"
+            >
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+            </button>
+            <button
+              onClick={() => {
+                // Allow confirming without URL
+                handleConfirm('confirmed')
+              }}
+              className="text-xs text-gray-500 hover:text-gray-700 whitespace-nowrap"
+            >
+              Skip URL
+            </button>
+          </div>
+          {help && (
+            <p className="text-xs text-gray-500 mt-2">
+              Not sure?{' '}
+              <a
+                href={help.checkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-notable-600 hover:text-notable-700"
+              >
+                Check {label} →
+              </a>
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Expanded details */}
+      {isExpanded && !showUrlInput && (
+        <div className="px-4 pb-4 border-t border-gray-200 bg-white">
+          <div className="mt-3 space-y-2">
+            {/* Why this platform matters */}
+            {impact && (
+              <p className="text-sm text-gray-600">
+                <strong className="text-gray-700">Why it matters:</strong> {impact}
+              </p>
+            )}
+
+            {/* Profile URL if we have one */}
+            {profileUrl && status === 'confirmed' && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">Profile:</span>
+                <a
+                  href={profileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-notable-600 hover:text-notable-700 
+                             flex items-center gap-1 truncate"
+                >
+                  {profileUrl}
+                  <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                </a>
+              </div>
+            )}
+
+            {/* Help checking */}
+            {help && status !== 'confirmed' && (
+              <div className="bg-gray-50 rounded-lg p-3 mt-2">
+                <p className="text-sm text-gray-600">{help.description}</p>
+                <a
+                  href={help.checkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-notable-600 hover:text-notable-700 
+                             flex items-center gap-1 mt-1 font-medium"
+                >
+                  Check {label}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            )}
           </div>
         </div>
       )}
