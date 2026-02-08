@@ -145,7 +145,7 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-notable-100 rounded-full flex items-center justify-center text-notable-600 font-bold mb-4">2</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">We Scan AI Platforms</h3>
               <p className="text-gray-600">
-                Notable queries ChatGPT, Claude, Gemini, and Perplexity with real buyer questions about your market.
+                Notable queries ChatGPT, Gemini, and Perplexity with real buyer questions about your market.
               </p>
             </div>
             <div className="bg-white rounded-xl p-8 shadow-sm">
@@ -175,7 +175,7 @@ export default function HomePage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">Visibility Score</h3>
-                <p className="text-gray-600">Track your AI visibility across ChatGPT, Claude, Gemini, and Perplexity with a single score.</p>
+                <p className="text-gray-600">Track your AI visibility across ChatGPT, Gemini, and Perplexity with a single score.</p>
               </div>
             </div>
             <div className="flex gap-4 p-6 rounded-xl border border-gray-200">
@@ -252,7 +252,7 @@ export default function HomePage() {
             <ul className="space-y-3 mb-8 text-left">
               <li className="flex items-center gap-3">
                 <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                <span className="text-gray-700">AI scanning across ChatGPT, Claude, Gemini & Perplexity</span>
+                <span className="text-gray-700">AI scanning across ChatGPT, Gemini & Perplexity</span>
               </li>
               <li className="flex items-center gap-3">
                 <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
