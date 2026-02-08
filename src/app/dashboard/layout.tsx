@@ -9,7 +9,7 @@ import {
   TrendingUp,
   Plus,
   Link2,
-  Lightbulb
+  Lightbulb,
   Shield
 } from 'lucide-react'
 
