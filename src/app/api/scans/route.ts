@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { getUserSubscription, canRunScans } from '@/lib/subscription'
 import { queryLLM, parseAgentMention, renderPrompt, LLMProvider } from '@/lib/llm'
 import prompts from '@/lib/prompts/real-estate.json'
+import { runProfileAudit, isAuditStale } from '@/lib/profile-audit'
 
 interface Prompt {
   id: number
@@ -204,8 +205,24 @@ export async function POST(request: Request) {
       }
     }
 
-    // Wait for all tasks to complete
-    await Promise.all(allTasks)
+    // Run profile audit in parallel (no extra wait time)
+    const profileAuditTask = (async () => {
+      try {
+        const stale = await isAuditStale(userId)
+        if (stale) {
+          const location = `${agent.city}, ${agent.state}`
+          await runProfileAudit(userId, agent.name, location)
+          console.log(`[Profile Audit] Completed for ${agent.name}`)
+        } else {
+          console.log(`[Profile Audit] Skipped — recent audit exists`)
+        }
+      } catch (err) {
+        console.error('[Profile Audit] Failed (non-blocking):', err)
+      }
+    })()
+
+    // Wait for all tasks to complete (scans + audit in parallel)
+    await Promise.all([...allTasks, profileAuditTask])
 
     const totalScans = results.length
     const mentionedScans = results.filter(r => r.mentioned).length
